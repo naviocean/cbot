@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="cTrader.Automate" Version="*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\Common\*.cs" Link="Common\%(FileName)%(Extension)" />
+    <!-- Same ZigZag math as chart indicator (no [Indicator] type — CT0003) -->
+    <Compile Include="..\..\..\Indicators\ZigZag\ZigZagCore.cs" Link="Indicators\ZigZagCore.cs" />
+  </ItemGroup>
+</Project>
