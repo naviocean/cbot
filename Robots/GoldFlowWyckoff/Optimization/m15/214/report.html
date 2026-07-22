@@ -1,0 +1,1473 @@
+
+<!DOCTYPE html>
+<html data-app-version="4.8.2">
+    <head>
+        <title>Historical Replay Report | cTrader</title>
+
+        <meta name="title" content="Historical Replay Report | cTrader">
+        <meta name="description" content="Backtesting report of a cBot from cTrader Algo: equity, trade statistics, parameters, used symbols, positions, orders, history.">
+
+        <meta name="author" content="Spotware Systems Ltd">
+
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-eval' 'unsafe-inline' data: https: http: gap: ws: wss: blob: filesystem: file:">
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="format-detection" content="telephone=no">
+
+        <style type="text/css" data-fela-rehydration="58" data-fela-type="KEYFRAME">@-webkit-keyframes spinner-k1{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}@-moz-keyframes spinner-k1{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}@keyframes spinner-k1{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}@-webkit-keyframes spinner-k2{0%{transform:rotate(0deg)}100%{transform:rotate(-360deg)}}@-moz-keyframes spinner-k2{0%{transform:rotate(0deg)}100%{transform:rotate(-360deg)}}@keyframes spinner-k2{0%{transform:rotate(0deg)}100%{transform:rotate(-360deg)}}</style><style type="text/css" data-fela-rehydration="58" data-fela-type="RULE">.spinner-a{position:absolute}.spinner-b{margin-left:auto}.spinner-c{margin-bottom:auto}.spinner-d{margin-right:auto}.spinner-e{margin-top:auto}.spinner-f{top:0}.spinner-g{bottom:0}.spinner-h{left:0}.spinner-i{right:0}.spinner-j{width:50px}.spinner-k{height:50px}.spinner-l{display:flex}.spinner-m{z-index:200}.spinner-n:before{content:""}.spinner-o:before{position:absolute}.spinner-p:before{border-style:solid}.spinner-q:before{border-top-left-radius:50%}.spinner-r:before{border-top-right-radius:50%}.spinner-s:before{border-bottom-right-radius:50%}.spinner-t:before{border-bottom-left-radius:50%}.spinner-u:before{display:inline-block}.spinner-v:before{box-sizing:border-box}.spinner-w:before{border-width:7px}.spinner-x:before{border-top-color:transparent}.spinner-y:before{border-left-color:transparent}.spinner-z:before{margin-top:7px}.spinner-ab:before{margin-right:7px}.spinner-ac:before{margin-bottom:7px}.spinner-ae:before{margin-left:7px}.spinner-af:before{width:calc(100% - 14px)}.spinner-ag:before{height:calc(100% - 14px)}.spinner-ah:before{border-right-color:#e75731}.spinner-ai:before{border-bottom-color:#e75731}.spinner-aj:before{animation-iteration-count:infinite}.spinner-ak:before{animation-timing-function:linear}.spinner-al:before{animation-duration:0.6s}.spinner-am:before{animation-name:spinner-k2}.spinner-an:after{content:""}.spinner-ao:after{position:absolute}.spinner-ap:after{border-style:solid}.spinner-aq:after{border-top-left-radius:50%}.spinner-ar:after{border-top-right-radius:50%}.spinner-as:after{border-bottom-right-radius:50%}.spinner-at:after{border-bottom-left-radius:50%}.spinner-au:after{display:inline-block}.spinner-av:after{box-sizing:border-box}.spinner-aw:after{border-width:7px}.spinner-ax:after{border-top-color:transparent}.spinner-ay:after{border-left-color:transparent}.spinner-az:after{width:100%}.spinner-ba:after{height:100%}.spinner-bb:after{border-right-color:rgba(36, 150, 73, 0.9)}.spinner-bc:after{border-bottom-color:rgba(36, 150, 73, 0.9)}.spinner-bd:after{animation-iteration-count:infinite}.spinner-be:after{animation-timing-function:linear}.spinner-bf:after{animation-duration:0.9s}.spinner-bg:after{animation-name:spinner-k1}</style>
+
+        <style>
+            html {
+                height: 100%;
+            }
+
+            body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                background-color: #292929;
+            }
+
+            #root {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+
+        <!-- startBacktestingReport -->
+        <script type="application/json" id="backtesting-report">{
+  "main": {
+    "utcOffset": 0,
+    "language": "en",
+    "depositAsset": "USD",
+    "depositAssetDigits": 2,
+    "period": "m15",
+    "symbol": "XAUUSD",
+    "brokerTitle": "Raw Trading Ltd",
+    "cBotName": "GoldFlowWyckoff",
+    "roi": -2.78,
+    "netProfit": -278.3,
+    "startingCapital": 10000,
+    "endingEquity": 9721.700000000004,
+    "endingBalance": 9732.200000000004,
+    "testingPeriod": {
+      "duration": "1m",
+      "startDate": 1781913600000,
+      "endDate": 1784505600000,
+      "formatted": "1m (20/06/2026 - 20/07/2026)"
+    },
+    "accountType": "hedging",
+    "accountLeverage": 1000,
+    "data": {
+      "type": "tickDataFromServer",
+      "isCustom": false,
+      "customName": null
+    },
+    "spread": null,
+    "commissions": {
+      "type": "usdPerMillionUsdVolume",
+      "value": 30,
+      "applyCommissionAutomatically": false
+    },
+    "theme": "dark",
+    "titleKind": null,
+    "authorNickName": "daiduongtnvn",
+    "authorLink": null,
+    "cBotLink": null,
+    "embedded": true
+  },
+  "equity": {
+    "points": [
+      {
+        "balance": 10000,
+        "minEquity": 10000,
+        "maxEquity": 10000,
+        "timestamp": 1781913600000
+      },
+      {
+        "balance": 9965.21,
+        "minEquity": 9965.21,
+        "maxEquity": 10014.67,
+        "timestamp": 1782089467982
+      },
+      {
+        "balance": 9993.9,
+        "minEquity": 9941.4,
+        "maxEquity": 10007.63,
+        "timestamp": 1782181719103
+      },
+      {
+        "balance": 10023.48,
+        "minEquity": 9992.789999999999,
+        "maxEquity": 10039.92,
+        "timestamp": 1782190949512
+      },
+      {
+        "balance": 10079,
+        "minEquity": 10022.24,
+        "maxEquity": 10095.76,
+        "timestamp": 1782202769981
+      },
+      {
+        "balance": 10131.6,
+        "minEquity": 10069.52,
+        "maxEquity": 10146.84,
+        "timestamp": 1782268497795
+      },
+      {
+        "balance": 10221.11,
+        "minEquity": 10096.61,
+        "maxEquity": 10221.11,
+        "timestamp": 1782306093379
+      },
+      {
+        "balance": 10254.310000000001,
+        "minEquity": 10212.86,
+        "maxEquity": 10272.36,
+        "timestamp": 1782465098128
+      },
+      {
+        "balance": 10292.53,
+        "minEquity": 10243.910000000002,
+        "maxEquity": 10306.69,
+        "timestamp": 1782478844215
+      },
+      {
+        "balance": 10314.650000000001,
+        "minEquity": 10278.09,
+        "maxEquity": 10330.45,
+        "timestamp": 1782481967376
+      },
+      {
+        "balance": 10270.710000000001,
+        "minEquity": 10270.710000000001,
+        "maxEquity": 10329.36,
+        "timestamp": 1782726505477
+      },
+      {
+        "balance": 10234.79,
+        "minEquity": 10234.79,
+        "maxEquity": 10297.910000000002,
+        "timestamp": 1782741980623
+      },
+      {
+        "balance": 10205.03,
+        "minEquity": 10205.03,
+        "maxEquity": 10241.720000000001,
+        "timestamp": 1782779865853
+      },
+      {
+        "balance": 10157.390000000001,
+        "minEquity": 10157.390000000001,
+        "maxEquity": 10250.61,
+        "timestamp": 1782871543914
+      },
+      {
+        "balance": 10201.710000000001,
+        "minEquity": 10152.090000000002,
+        "maxEquity": 10217.900000000001,
+        "timestamp": 1782913601939
+      },
+      {
+        "balance": 10155.210000000001,
+        "minEquity": 10155.210000000001,
+        "maxEquity": 10230.150000000001,
+        "timestamp": 1782931838983
+      },
+      {
+        "balance": 10110.810000000001,
+        "minEquity": 10110.810000000001,
+        "maxEquity": 10161.210000000001,
+        "timestamp": 1783317570530
+      },
+      {
+        "balance": 10066.410000000002,
+        "minEquity": 10066.410000000002,
+        "maxEquity": 10121.230000000001,
+        "timestamp": 1783423496374
+      },
+      {
+        "balance": 10016.190000000002,
+        "minEquity": 10016.190000000002,
+        "maxEquity": 10084.770000000002,
+        "timestamp": 1783426016072
+      },
+      {
+        "balance": 9961.950000000003,
+        "minEquity": 9961.950000000003,
+        "maxEquity": 10038.270000000002,
+        "timestamp": 1783431409208
+      },
+      {
+        "balance": 9918.670000000002,
+        "minEquity": 9918.670000000002,
+        "maxEquity": 9966.070000000003,
+        "timestamp": 1783432744435
+      },
+      {
+        "balance": 9878.020000000002,
+        "minEquity": 9878.020000000002,
+        "maxEquity": 9924.190000000002,
+        "timestamp": 1783450161237
+      },
+      {
+        "balance": 9834.420000000002,
+        "minEquity": 9834.420000000002,
+        "maxEquity": 9885.160000000002,
+        "timestamp": 1783471169284
+      },
+      {
+        "balance": 9881.760000000002,
+        "minEquity": 9808.780000000002,
+        "maxEquity": 9901.400000000001,
+        "timestamp": 1783522336255
+      },
+      {
+        "balance": 9828.400000000001,
+        "minEquity": 9828.400000000001,
+        "maxEquity": 9917.080000000002,
+        "timestamp": 1783536390260
+      },
+      {
+        "balance": 9780.410000000002,
+        "minEquity": 9780.410000000002,
+        "maxEquity": 9857.78,
+        "timestamp": 1783902894554
+      },
+      {
+        "balance": 9743.190000000002,
+        "minEquity": 9743.190000000002,
+        "maxEquity": 9807.730000000001,
+        "timestamp": 1783930516868
+      },
+      {
+        "balance": 9717.030000000002,
+        "minEquity": 9717.030000000002,
+        "maxEquity": 9758.490000000002,
+        "timestamp": 1784007001540
+      },
+      {
+        "balance": 9673.480000000003,
+        "minEquity": 9673.480000000003,
+        "maxEquity": 9734.730000000003,
+        "timestamp": 1784076922541
+      },
+      {
+        "balance": 9703.120000000003,
+        "minEquity": 9662.260000000004,
+        "maxEquity": 9723.040000000003,
+        "timestamp": 1784079288426
+      },
+      {
+        "balance": 9732.160000000003,
+        "minEquity": 9701.960000000003,
+        "maxEquity": 9750.900000000003,
+        "timestamp": 1784104175885
+      },
+      {
+        "balance": 9687.560000000003,
+        "minEquity": 9687.560000000003,
+        "maxEquity": 9738.760000000004,
+        "timestamp": 1784115684164
+      },
+      {
+        "balance": 9637.650000000003,
+        "minEquity": 9637.650000000003,
+        "maxEquity": 9687.910000000003,
+        "timestamp": 1784118601630
+      },
+      {
+        "balance": 9683.400000000003,
+        "minEquity": 9622.260000000004,
+        "maxEquity": 9702.090000000004,
+        "timestamp": 1784129118978
+      },
+      {
+        "balance": 9731.300000000003,
+        "minEquity": 9682.700000000003,
+        "maxEquity": 9750.620000000003,
+        "timestamp": 1784140512852
+      },
+      {
+        "balance": 9695.660000000003,
+        "minEquity": 9695.660000000003,
+        "maxEquity": 9731.300000000003,
+        "timestamp": 1784163579001
+      },
+      {
+        "balance": 9724.330000000004,
+        "minEquity": 9684.510000000004,
+        "maxEquity": 9741.890000000003,
+        "timestamp": 1784295375137
+      },
+      {
+        "balance": 9678.170000000004,
+        "minEquity": 9678.170000000004,
+        "maxEquity": 9749.290000000003,
+        "timestamp": 1784300665843
+      },
+      {
+        "balance": 9722.620000000004,
+        "minEquity": 9634.620000000004,
+        "maxEquity": 9742.120000000004,
+        "timestamp": 1784316604609
+      },
+      {
+        "balance": 9749.860000000004,
+        "minEquity": 9706.740000000005,
+        "maxEquity": 9763.280000000004,
+        "timestamp": 1784536059362
+      },
+      {
+        "balance": 9704.520000000004,
+        "minEquity": 9704.520000000004,
+        "maxEquity": 9785.360000000004,
+        "timestamp": 1784556604829
+      },
+      {
+        "balance": 9732.200000000004,
+        "minEquity": 9694.240000000003,
+        "maxEquity": 9754.000000000004,
+        "timestamp": 1784560279113
+      },
+      {
+        "balance": 9732.200000000004,
+        "minEquity": 9701.340000000004,
+        "maxEquity": 9739.720000000005,
+        "timestamp": 1784591999763
+      }
+    ],
+    "maxBalanceDrawdownPercent": 6.563480098694556,
+    "maxEquityDrawdownPercent": 6.855364480734109,
+    "maxBalanceDrawdownAbsolute": 676.9999999999982,
+    "maxEquityDrawdownAbsolute": 708.1899999999969
+  },
+  "tradeStatistics": {
+    "netProfit": {
+      "all": -267.8,
+      "long": -220.38,
+      "short": -47.42
+    },
+    "profitFactor": {
+      "all": 0.73,
+      "long": 0.52,
+      "short": 0.91
+    },
+    "commissions": {
+      "all": -27.6,
+      "long": -10.56,
+      "short": -17.04
+    },
+    "swaps": {
+      "all": -1.57,
+      "long": -2.65,
+      "short": 1.08
+    },
+    "totalTrades": {
+      "all": 41,
+      "long": 18,
+      "short": 23
+    },
+    "winningTrades": {
+      "all": 18,
+      "long": 7,
+      "short": 11
+    },
+    "maxConsecutiveWinningTrades": {
+      "all": 8,
+      "long": 3,
+      "short": 5
+    },
+    "largestWinningTrade": {
+      "all": 89.51,
+      "long": 47.9,
+      "short": 89.51
+    },
+    "losingTrades": {
+      "all": 23,
+      "long": 11,
+      "short": 12
+    },
+    "maxConsecutiveLosingTrades": {
+      "all": 8,
+      "long": 5,
+      "short": 4
+    },
+    "largestLosingTrade": {
+      "all": -54.24,
+      "long": -47.99,
+      "short": -54.24
+    },
+    "averageTrade": {
+      "all": -6.53,
+      "long": -12.24,
+      "short": -2.06
+    }
+  },
+  "usedSymbols": [
+    {
+      "symbol": "XAUUSD",
+      "period": "m15",
+      "swapTime": "21:00",
+      "baseAsset": "XAU",
+      "baseAssetDigits": 2,
+      "quoteAsset": "USD",
+      "quoteAssetDigits": 2,
+      "commissions": {
+        "type": "usdPerMillionUsdVolume",
+        "value": 30,
+        "applyCommissionAutomatically": false
+      },
+      "swapLong": -52.92,
+      "swapShort": 35.94,
+      "threeDaySwaps": "wednesday",
+      "weekendSwaps": false,
+      "swapPeriods": 24,
+      "gracePeriods": 0,
+      "digits": 2,
+      "lotSize": 100,
+      "stepVolume": 1,
+      "pipPosition": 2,
+      "swapCalculationType": "pips"
+    }
+  ],
+  "positions": {
+    "columns": [
+      "symbol",
+      "quantity",
+      "volume",
+      "direction",
+      "entryPrice",
+      "tp",
+      "sl",
+      "comment",
+      "pips",
+      "gross",
+      "net"
+    ],
+    "items": [
+      {
+        "id": 42,
+        "created": 1784560500001,
+        "quantity": 0.02,
+        "volume": 2,
+        "entryPrice": 4014.42,
+        "tp": 4053.4300000000003,
+        "sl": 3994.9500000000003,
+        "commissions": -0.24,
+        "closingCommissions": -0.24,
+        "swaps": -1.06,
+        "pips": -448.00000000000006,
+        "gross": -8.96,
+        "net": -10.500000000000002,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "symbol": "XAUUSD",
+        "direction": "buy"
+      }
+    ],
+    "marginUsed": 8.01964,
+    "freeMargin": 9713.680360000004,
+    "marginLevel": 121226.63860223153,
+    "unrealizedNet": -10.500000000000002,
+    "unrealizedGross": -8.96
+  },
+  "orders": {
+    "columns": [
+      "id",
+      "direction",
+      "orderType",
+      "created",
+      "submittedPrice",
+      "volume",
+      "currentPrice",
+      "expiryDate",
+      "tp",
+      "sl",
+      "comment"
+    ],
+    "items": []
+  },
+  "history": {
+    "columns": [
+      "id",
+      "symbol",
+      "quantity",
+      "volume",
+      "direction",
+      "entryPrice",
+      "closePrice",
+      "net",
+      "gross",
+      "balance"
+    ],
+    "items": [
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 2,
+        "net": -34.79,
+        "gross": -34.55,
+        "entryTime": 1782080100243,
+        "closeTime": 1782089467982,
+        "entryPrice": 4151.57,
+        "closePrice": 4186.12,
+        "commissions": -0.24,
+        "swaps": 0,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9965.21,
+        "quantity": 0.01,
+        "pips": -3454.9999999999995,
+        "balanceDrawdownPercent": 0,
+        "equityDrawdownPercent": 0.4938754846640073,
+        "balanceDrawdownAbsolute": 0,
+        "equityDrawdownAbsolute": 49.460000000000946
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 4,
+        "net": 28.69,
+        "gross": 28.57,
+        "entryTime": 1782096300276,
+        "closeTime": 1782181719103,
+        "entryPrice": 4191.49,
+        "closePrice": 4162.92,
+        "commissions": -0.24,
+        "swaps": 0.36,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9993.9,
+        "quantity": 0.01,
+        "pips": 2857,
+        "balanceDrawdownPercent": 0.34790000000000904,
+        "equityDrawdownPercent": 0.7316267036257853,
+        "balanceDrawdownAbsolute": 34.79000000000087,
+        "equityDrawdownAbsolute": 73.27000000000044
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 6,
+        "net": 29.580000000000002,
+        "gross": 29.82,
+        "entryTime": 1782181800183,
+        "closeTime": 1782190949512,
+        "entryPrice": 4161.46,
+        "closePrice": 4131.64,
+        "commissions": -0.24,
+        "swaps": 0,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10023.48,
+        "quantity": 0.01,
+        "pips": 2982,
+        "balanceDrawdownPercent": 0.0610000000000036,
+        "equityDrawdownPercent": 0.21847949058731858,
+        "balanceDrawdownAbsolute": 6.100000000000364,
+        "equityDrawdownAbsolute": 21.88000000000102
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 8,
+        "net": 55.52,
+        "gross": 56,
+        "entryTime": 1782193500232,
+        "closeTime": 1782202769981,
+        "entryPrice": 4127.53,
+        "closePrice": 4099.53,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10079,
+        "quantity": 0.02,
+        "pips": 2800,
+        "balanceDrawdownPercent": 0,
+        "equityDrawdownPercent": 0.30631161040344895,
+        "balanceDrawdownAbsolute": 0,
+        "equityDrawdownAbsolute": 30.799999999999272
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 10,
+        "net": 52.6,
+        "gross": 53.08,
+        "entryTime": 1782264600321,
+        "closeTime": 1782268497795,
+        "entryPrice": 4097.88,
+        "closePrice": 4071.34,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10131.6,
+        "quantity": 0.02,
+        "pips": 2654,
+        "balanceDrawdownPercent": 0,
+        "equityDrawdownPercent": 0.26688455314147813,
+        "balanceDrawdownAbsolute": 0,
+        "equityDrawdownAbsolute": 26.979999999999563
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 12,
+        "net": 89.51,
+        "gross": 89.75,
+        "entryTime": 1782273600129,
+        "closeTime": 1782306093379,
+        "entryPrice": 4062.92,
+        "closePrice": 3973.17,
+        "commissions": -0.24,
+        "swaps": 0,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10221.11,
+        "quantity": 0.01,
+        "pips": 8975,
+        "balanceDrawdownPercent": 0,
+        "equityDrawdownPercent": 0.4950309653054504,
+        "balanceDrawdownAbsolute": 0,
+        "equityDrawdownAbsolute": 50.22999999999956
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 14,
+        "net": 33.199999999999996,
+        "gross": 34.4,
+        "entryTime": 1782464400219,
+        "closeTime": 1782465098128,
+        "entryPrice": 4031.11,
+        "closePrice": 4037.99,
+        "commissions": -1.2,
+        "swaps": 0,
+        "volume": 5,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10254.310000000001,
+        "quantity": 0.05,
+        "pips": 688,
+        "balanceDrawdownPercent": 0,
+        "equityDrawdownPercent": 0.17571424677483335,
+        "balanceDrawdownAbsolute": 0,
+        "equityDrawdownAbsolute": 18.049999999999272
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 16,
+        "net": 38.220000000000006,
+        "gross": 38.7,
+        "entryTime": 1782465300000,
+        "closeTime": 1782478844215,
+        "entryPrice": 4039.57,
+        "closePrice": 4058.92,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10292.53,
+        "quantity": 0.02,
+        "pips": 1935,
+        "balanceDrawdownPercent": 0,
+        "equityDrawdownPercent": 0.3764592413840646,
+        "balanceDrawdownAbsolute": 0,
+        "equityDrawdownAbsolute": 38.719999999999345
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 18,
+        "net": 22.12,
+        "gross": 22.6,
+        "entryTime": 1782479700290,
+        "closeTime": 1782481967376,
+        "entryPrice": 4050.5,
+        "closePrice": 4061.8,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10314.650000000001,
+        "quantity": 0.02,
+        "pips": 1130,
+        "balanceDrawdownPercent": 0,
+        "equityDrawdownPercent": 0.27748966933128255,
+        "balanceDrawdownAbsolute": 0,
+        "equityDrawdownAbsolute": 28.600000000000364
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 20,
+        "net": -43.940000000000005,
+        "gross": -43.17,
+        "entryTime": 1782486000292,
+        "closeTime": 1782726505477,
+        "entryPrice": 4081.08,
+        "closePrice": 4037.91,
+        "commissions": -0.24,
+        "swaps": -0.53,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10270.710000000001,
+        "quantity": 0.01,
+        "pips": -4317,
+        "balanceDrawdownPercent": 0,
+        "equityDrawdownPercent": 0.5782903939324984,
+        "balanceDrawdownAbsolute": 0,
+        "equityDrawdownAbsolute": 59.73999999999978
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 22,
+        "net": -35.919999999999995,
+        "gross": -35.44,
+        "entryTime": 1782728100238,
+        "closeTime": 1782741980623,
+        "entryPrice": 4038.53,
+        "closePrice": 4020.81,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10234.79,
+        "quantity": 0.02,
+        "pips": -1771.9999999999998,
+        "balanceDrawdownPercent": 0.42599603476607256,
+        "equityDrawdownPercent": 0.9260003194439724,
+        "balanceDrawdownAbsolute": 43.93999999999869,
+        "equityDrawdownAbsolute": 95.65999999999985
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 24,
+        "net": -29.759999999999998,
+        "gross": -28.99,
+        "entryTime": 1782743400073,
+        "closeTime": 1782779865853,
+        "entryPrice": 4024.91,
+        "closePrice": 3995.92,
+        "commissions": -0.24,
+        "swaps": -0.53,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10205.03,
+        "quantity": 0.01,
+        "pips": -2899,
+        "balanceDrawdownPercent": 0.7742385829863233,
+        "equityDrawdownPercent": 1.214080703163948,
+        "balanceDrawdownAbsolute": 79.85999999999876,
+        "equityDrawdownAbsolute": 125.42000000000007
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 26,
+        "net": -47.64,
+        "gross": -46.87,
+        "entryTime": 1782811800291,
+        "closeTime": 1782871543914,
+        "entryPrice": 4017.6,
+        "closePrice": 3970.73,
+        "commissions": -0.24,
+        "swaps": -0.53,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10157.390000000001,
+        "quantity": 0.01,
+        "pips": -4687,
+        "balanceDrawdownPercent": 1.0627602487723675,
+        "equityDrawdownPercent": 1.6752416400059966,
+        "balanceDrawdownAbsolute": 109.61999999999898,
+        "equityDrawdownAbsolute": 173.0599999999995
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 28,
+        "net": 44.32,
+        "gross": 44.56,
+        "entryTime": 1782912600110,
+        "closeTime": 1782913601939,
+        "entryPrice": 4047.07,
+        "closePrice": 4091.63,
+        "commissions": -0.24,
+        "swaps": 0,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10201.710000000001,
+        "quantity": 0.01,
+        "pips": 4456,
+        "balanceDrawdownPercent": 1.524627592792756,
+        "equityDrawdownPercent": 1.726546278235689,
+        "balanceDrawdownAbsolute": 157.2599999999984,
+        "equityDrawdownAbsolute": 178.35999999999876
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 30,
+        "net": -46.5,
+        "gross": -45.06,
+        "entryTime": 1782927000141,
+        "closeTime": 1782931838983,
+        "entryPrice": 4068.34,
+        "closePrice": 4060.83,
+        "commissions": -1.44,
+        "swaps": 0,
+        "volume": 6,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10155.210000000001,
+        "quantity": 0.06,
+        "pips": -751,
+        "balanceDrawdownPercent": 1.094947477616778,
+        "equityDrawdownPercent": 1.696344302523121,
+        "balanceDrawdownAbsolute": 112.93999999999869,
+        "equityDrawdownAbsolute": 175.23999999999978
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 32,
+        "net": -44.400000000000006,
+        "gross": -43.2,
+        "entryTime": 1783316700325,
+        "closeTime": 1783317570530,
+        "entryPrice": 4155.41,
+        "closePrice": 4146.77,
+        "commissions": -1.2,
+        "swaps": 0,
+        "volume": 5,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10110.810000000001,
+        "quantity": 0.05,
+        "pips": -864,
+        "balanceDrawdownPercent": 1.545762580407469,
+        "equityDrawdownPercent": 2.1261416492021104,
+        "balanceDrawdownAbsolute": 159.4399999999987,
+        "equityDrawdownAbsolute": 219.63999999999942
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 34,
+        "net": -44.4,
+        "gross": -43.92,
+        "entryTime": 1783401300041,
+        "closeTime": 1783423496374,
+        "entryPrice": 4122.32,
+        "closePrice": 4144.28,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10066.410000000002,
+        "quantity": 0.02,
+        "pips": -2196,
+        "balanceDrawdownPercent": 1.976218291459216,
+        "equityDrawdownPercent": 2.5559389958810996,
+        "balanceDrawdownAbsolute": 203.83999999999833,
+        "equityDrawdownAbsolute": 264.03999999999905
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 36,
+        "net": -50.22,
+        "gross": -48.06,
+        "entryTime": 1783425600070,
+        "closeTime": 1783426016072,
+        "entryPrice": 4157.19,
+        "closePrice": 4162.53,
+        "commissions": -2.16,
+        "swaps": 0,
+        "volume": 9,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 10016.190000000002,
+        "quantity": 0.09,
+        "pips": -534,
+        "balanceDrawdownPercent": 2.4066740025109725,
+        "equityDrawdownPercent": 3.042074643408548,
+        "balanceDrawdownAbsolute": 248.23999999999796,
+        "equityDrawdownAbsolute": 314.2599999999984
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 38,
+        "net": -54.24,
+        "gross": -53.28,
+        "entryTime": 1783427400382,
+        "closeTime": 1783431409208,
+        "entryPrice": 4166.15,
+        "closePrice": 4179.47,
+        "commissions": -0.96,
+        "swaps": 0,
+        "volume": 4,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9961.950000000003,
+        "quantity": 0.04,
+        "pips": -1332,
+        "balanceDrawdownPercent": 2.8935543135249087,
+        "equityDrawdownPercent": 3.5671243750272073,
+        "balanceDrawdownAbsolute": 298.4599999999973,
+        "equityDrawdownAbsolute": 368.4999999999982
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 40,
+        "net": -43.279999999999994,
+        "gross": -42.8,
+        "entryTime": 1783431900135,
+        "closeTime": 1783432744435,
+        "entryPrice": 4177.72,
+        "closePrice": 4156.32,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9918.670000000002,
+        "quantity": 0.02,
+        "pips": -2140,
+        "balanceDrawdownPercent": 3.4194083172962437,
+        "equityDrawdownPercent": 3.986079986835025,
+        "balanceDrawdownAbsolute": 352.6999999999971,
+        "equityDrawdownAbsolute": 411.77999999999884
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 42,
+        "net": -40.65,
+        "gross": -39.93,
+        "entryTime": 1783445400535,
+        "closeTime": 1783450161237,
+        "entryPrice": 4146.12,
+        "closePrice": 4132.81,
+        "commissions": -0.72,
+        "swaps": 0,
+        "volume": 3,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9878.020000000002,
+        "quantity": 0.03,
+        "pips": -1331,
+        "balanceDrawdownPercent": 3.839005686087245,
+        "equityDrawdownPercent": 4.379576881936396,
+        "balanceDrawdownAbsolute": 395.97999999999774,
+        "equityDrawdownAbsolute": 452.4299999999985
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 44,
+        "net": -43.599999999999994,
+        "gross": -43.12,
+        "entryTime": 1783463400431,
+        "closeTime": 1783471169284,
+        "entryPrice": 4099.93,
+        "closePrice": 4121.49,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9834.420000000002,
+        "quantity": 0.02,
+        "pips": -2156,
+        "balanceDrawdownPercent": 4.233105340462324,
+        "equityDrawdownPercent": 4.801630132278834,
+        "balanceDrawdownAbsolute": 436.6299999999974,
+        "equityDrawdownAbsolute": 496.02999999999884
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 46,
+        "net": 47.34,
+        "gross": 47.82,
+        "entryTime": 1783517400389,
+        "closeTime": 1783522336255,
+        "entryPrice": 4067.83,
+        "closePrice": 4043.92,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9881.760000000002,
+        "quantity": 0.02,
+        "pips": 2391,
+        "balanceDrawdownPercent": 4.6558050927564,
+        "equityDrawdownPercent": 5.049828419865525,
+        "balanceDrawdownAbsolute": 480.22999999999774,
+        "equityDrawdownAbsolute": 521.6699999999983
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 48,
+        "net": -53.36,
+        "gross": -52.4,
+        "entryTime": 1783531800268,
+        "closeTime": 1783536390260,
+        "entryPrice": 4072.94,
+        "closePrice": 4086.04,
+        "commissions": -0.96,
+        "swaps": 0,
+        "volume": 4,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9828.400000000001,
+        "quantity": 0.04,
+        "pips": -1310,
+        "balanceDrawdownPercent": 4.196846233270135,
+        "equityDrawdownPercent": 4.8599044572114405,
+        "balanceDrawdownAbsolute": 432.8899999999976,
+        "equityDrawdownAbsolute": 502.0499999999993
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 50,
+        "net": -47.99,
+        "gross": -46.69,
+        "entryTime": 1783589400151,
+        "closeTime": 1783902894554,
+        "entryPrice": 4108.39,
+        "closePrice": 4061.7,
+        "commissions": -0.24,
+        "swaps": -1.06,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9780.410000000002,
+        "quantity": 0.01,
+        "pips": -4669,
+        "balanceDrawdownPercent": 4.714168682408013,
+        "equityDrawdownPercent": 5.324453436200736,
+        "balanceDrawdownAbsolute": 486.2499999999982,
+        "equityDrawdownAbsolute": 550.039999999999
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 52,
+        "net": -37.22,
+        "gross": -36.74,
+        "entryTime": 1783920600174,
+        "closeTime": 1783930516868,
+        "entryPrice": 4057.88,
+        "closePrice": 4076.25,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9743.190000000002,
+        "quantity": 0.02,
+        "pips": -1837,
+        "balanceDrawdownPercent": 5.179429258384899,
+        "equityDrawdownPercent": 5.684747518259111,
+        "balanceDrawdownAbsolute": 534.239999999998,
+        "equityDrawdownAbsolute": 587.2599999999984
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 54,
+        "net": -26.16,
+        "gross": -26.28,
+        "entryTime": 1783963800309,
+        "closeTime": 1784007001540,
+        "entryPrice": 3998.91,
+        "closePrice": 4025.19,
+        "commissions": -0.24,
+        "swaps": 0.36,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9717.030000000002,
+        "quantity": 0.01,
+        "pips": -2628,
+        "balanceDrawdownPercent": 5.540275239586385,
+        "equityDrawdownPercent": 5.93797946846457,
+        "balanceDrawdownAbsolute": 571.4599999999973,
+        "equityDrawdownAbsolute": 613.4199999999983
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 56,
+        "net": -43.550000000000004,
+        "gross": -42.35,
+        "entryTime": 1784067300308,
+        "closeTime": 1784076922541,
+        "entryPrice": 4050.76,
+        "closePrice": 4059.23,
+        "commissions": -1.2,
+        "swaps": 0,
+        "volume": 5,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9673.480000000003,
+        "quantity": 0.05,
+        "pips": -847,
+        "balanceDrawdownPercent": 5.793895090962825,
+        "equityDrawdownPercent": 6.359548712785963,
+        "balanceDrawdownAbsolute": 597.6199999999972,
+        "equityDrawdownAbsolute": 656.9699999999975
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 58,
+        "net": 29.639999999999997,
+        "gross": 31.08,
+        "entryTime": 1784078100353,
+        "closeTime": 1784079288426,
+        "entryPrice": 4055.73,
+        "closePrice": 4050.55,
+        "commissions": -1.44,
+        "swaps": 0,
+        "volume": 6,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9703.120000000003,
+        "quantity": 0.06,
+        "pips": 518,
+        "balanceDrawdownPercent": 6.216110095834527,
+        "equityDrawdownPercent": 6.468159663906188,
+        "balanceDrawdownAbsolute": 641.1699999999964,
+        "equityDrawdownAbsolute": 668.1899999999969
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 60,
+        "net": 29.04,
+        "gross": 29.52,
+        "entryTime": 1784083500102,
+        "closeTime": 1784104175885,
+        "entryPrice": 4041.68,
+        "closePrice": 4026.92,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9732.160000000003,
+        "quantity": 0.02,
+        "pips": 1476,
+        "balanceDrawdownPercent": 5.928751823862148,
+        "equityDrawdownPercent": 6.083858883204487,
+        "balanceDrawdownAbsolute": 611.529999999997,
+        "equityDrawdownAbsolute": 628.489999999998
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 62,
+        "net": -44.6,
+        "gross": -43.64,
+        "entryTime": 1784104200251,
+        "closeTime": 1784115684164,
+        "entryPrice": 4026.7,
+        "closePrice": 4037.61,
+        "commissions": -0.96,
+        "swaps": 0,
+        "volume": 4,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9687.560000000003,
+        "quantity": 0.04,
+        "pips": -1091,
+        "balanceDrawdownPercent": 5.647210520958017,
+        "equityDrawdownPercent": 6.223252617262535,
+        "balanceDrawdownAbsolute": 582.4899999999961,
+        "equityDrawdownAbsolute": 642.8899999999976
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 64,
+        "net": -49.91,
+        "gross": -48.23,
+        "entryTime": 1784117700152,
+        "closeTime": 1784118601630,
+        "entryPrice": 4037.99,
+        "closePrice": 4044.88,
+        "commissions": -1.68,
+        "swaps": 0,
+        "volume": 7,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9637.650000000003,
+        "quantity": 0.07,
+        "pips": -689,
+        "balanceDrawdownPercent": 6.079605221699195,
+        "equityDrawdownPercent": 6.706387427459573,
+        "balanceDrawdownAbsolute": 627.0899999999965,
+        "equityDrawdownAbsolute": 692.7999999999975
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 66,
+        "net": 45.75,
+        "gross": 46.47,
+        "entryTime": 1784121300277,
+        "closeTime": 1784129118978,
+        "entryPrice": 4061.68,
+        "closePrice": 4046.19,
+        "commissions": -0.72,
+        "swaps": 0,
+        "volume": 3,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9683.400000000003,
+        "quantity": 0.03,
+        "pips": 1549,
+        "balanceDrawdownPercent": 6.563480098694536,
+        "equityDrawdownPercent": 6.855364480734109,
+        "balanceDrawdownAbsolute": 676.9999999999964,
+        "equityDrawdownAbsolute": 708.1899999999969
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 68,
+        "net": 47.900000000000006,
+        "gross": 48.38,
+        "entryTime": 1784136600351,
+        "closeTime": 1784140512852,
+        "entryPrice": 4047.34,
+        "closePrice": 4071.53,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9731.300000000003,
+        "quantity": 0.02,
+        "pips": 2419,
+        "balanceDrawdownPercent": 6.1199362072391805,
+        "equityDrawdownPercent": 6.270298002507133,
+        "balanceDrawdownAbsolute": 631.2499999999964,
+        "equityDrawdownAbsolute": 647.7499999999982
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 70,
+        "net": -35.63999999999999,
+        "gross": -35.16,
+        "entryTime": 1784154600448,
+        "closeTime": 1784163579001,
+        "entryPrice": 4062.53,
+        "closePrice": 4044.95,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9695.660000000003,
+        "quantity": 0.02,
+        "pips": -1757.9999999999998,
+        "balanceDrawdownPercent": 5.655548176622542,
+        "equityDrawdownPercent": 6.1448436418548775,
+        "balanceDrawdownAbsolute": 583.3499999999967,
+        "equityDrawdownAbsolute": 634.7899999999972
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 72,
+        "net": 28.67,
+        "gross": 28.55,
+        "entryTime": 1784208600515,
+        "closeTime": 1784295375137,
+        "entryPrice": 4005.93,
+        "closePrice": 3977.38,
+        "commissions": -0.24,
+        "swaps": 0.36,
+        "volume": 1,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9724.330000000004,
+        "quantity": 0.01,
+        "pips": 2855,
+        "balanceDrawdownPercent": 6.0010761392775915,
+        "equityDrawdownPercent": 6.252776984545657,
+        "balanceDrawdownAbsolute": 618.9899999999961,
+        "equityDrawdownAbsolute": 645.9399999999969
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 74,
+        "net": -46.160000000000004,
+        "gross": -45.2,
+        "entryTime": 1784298600094,
+        "closeTime": 1784300665843,
+        "entryPrice": 3998.73,
+        "closePrice": 4010.03,
+        "commissions": -0.96,
+        "swaps": 0,
+        "volume": 4,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9678.170000000004,
+        "quantity": 0.04,
+        "pips": -1130,
+        "balanceDrawdownPercent": 5.7231219672989,
+        "equityDrawdownPercent": 6.314148948012884,
+        "balanceDrawdownAbsolute": 590.3199999999961,
+        "equityDrawdownAbsolute": 652.279999999997
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "sell",
+        "id": 76,
+        "net": 44.449999999999996,
+        "gross": 45.65,
+        "entryTime": 1784303100061,
+        "closeTime": 1784316604609,
+        "entryPrice": 4015.42,
+        "closePrice": 4006.29,
+        "commissions": -1.2,
+        "swaps": 0,
+        "volume": 5,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9722.620000000004,
+        "quantity": 0.05,
+        "pips": 913.0000000000001,
+        "balanceDrawdownPercent": 6.1706407876175735,
+        "equityDrawdownPercent": 6.735718192334277,
+        "balanceDrawdownAbsolute": 636.4799999999959,
+        "equityDrawdownAbsolute": 695.8299999999963
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 78,
+        "net": 27.24,
+        "gross": 27.72,
+        "entryTime": 1784526300191,
+        "closeTime": 1784536059362,
+        "entryPrice": 4010,
+        "closePrice": 4023.86,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9749.860000000004,
+        "quantity": 0.02,
+        "pips": 1386,
+        "balanceDrawdownPercent": 5.739700329143452,
+        "equityDrawdownPercent": 6.037587907593527,
+        "balanceDrawdownAbsolute": 592.0299999999952,
+        "equityDrawdownAbsolute": 623.7099999999955
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 80,
+        "net": -45.339999999999996,
+        "gross": -44.86,
+        "entryTime": 1784537100420,
+        "closeTime": 1784556604829,
+        "entryPrice": 4022.17,
+        "closePrice": 3999.74,
+        "commissions": -0.48,
+        "swaps": 0,
+        "volume": 2,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9704.520000000004,
+        "quantity": 0.02,
+        "pips": -2243,
+        "balanceDrawdownPercent": 5.475609933444131,
+        "equityDrawdownPercent": 6.059077774927487,
+        "balanceDrawdownAbsolute": 564.7899999999954,
+        "equityDrawdownAbsolute": 625.9299999999967
+      },
+      {
+        "symbol": "XAUUSD",
+        "direction": "buy",
+        "id": 82,
+        "net": 27.68,
+        "gross": 28.64,
+        "entryTime": 1784557800375,
+        "closeTime": 1784560279113,
+        "entryPrice": 4006.86,
+        "closePrice": 4014.02,
+        "commissions": -0.96,
+        "swaps": 0,
+        "volume": 4,
+        "label": "GoldFlowWyckoff",
+        "comment": null,
+        "balance": 9732.200000000004,
+        "quantity": 0.04,
+        "pips": 716,
+        "balanceDrawdownPercent": 5.915178896036181,
+        "equityDrawdownPercent": 6.15858941285227,
+        "balanceDrawdownAbsolute": 610.1299999999956,
+        "equityDrawdownAbsolute": 636.2099999999973
+      }
+    ]
+  }
+}</script>
+        <!-- endBacktestingReport -->
+    </head>
+    <body>
+        <div class="spinner-a spinner-b spinner-c spinner-d spinner-e spinner-f spinner-g spinner-h spinner-i spinner-j spinner-k spinner-l spinner-m spinner-n spinner-o spinner-p spinner-q spinner-r spinner-s spinner-t spinner-u spinner-v spinner-w spinner-x spinner-y spinner-z spinner-ab spinner-ac spinner-ae spinner-af spinner-ag spinner-ah spinner-ai spinner-aj spinner-ak spinner-al spinner-am spinner-an spinner-ao spinner-ap spinner-aq spinner-ar spinner-as spinner-at spinner-au spinner-av spinner-aw spinner-ax spinner-ay spinner-az spinner-ba spinner-bb spinner-bc spinner-bd spinner-be spinner-bf spinner-bg waitingIndicator" data-test-id="loader"></div>
+        <div id="root"></div>
+
+            <script id="init" defer src="https://backtesting.ctrader.com/v5.0.0/bundle/index-31bd62a5e13b796fd66a.js"></script>
+
+        <script type="text/javascript" id="app-init">
+            var script = document.getElementById('init');
+            script.onload = () => {
+                initApp('root');
+
+                script.remove();
+                document.getElementById('app-init').remove();
+            }
+        </script>
+    </body>
+</html>

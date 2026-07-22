@@ -1,0 +1,118 @@
+20/06/2026 00:00:00.000 | Info | CBot instance [GoldFlowWyckoff, XAUUSD, m15] started.
+21/06/2026 22:02:00.081 | Info | [2026.07.21 18:35:40.113] [GoldFlowWyckoff] [INFO] Starting GoldFlowWyckoff v1.0 on XAUUSD
+21/06/2026 22:02:00.081 | Info | [2026.07.21 18:35:40.690] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] M5 Wyckoff Engine Warmed Up: 50 pivots calculated.
+21/06/2026 22:02:00.081 | Info | [2026.07.21 18:35:41.122] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] HTF (Hour2) Wyckoff Engine Warmed Up: 50 pivots calculated.
+21/06/2026 22:02:00.081 | Info | [2026.07.21 18:35:41.122] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff CONFIG] SizeMode=RiskAmount, RiskAmount=$50.00, RiskPercent=0.75%, FixedLots=0.01
+21/06/2026 22:02:00.081 | Info | [2026.07.21 18:35:41.122] [GoldFlowWyckoff] [INFO] GoldFlowWyckoff initialized successfully. Active sessions: Asia+London+NY+Overlap
+21/06/2026 22:45:00.682 | Info | [2026.07.21 18:35:41.127] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=10.50 (1050.2 pips) | Volume=4 units (0.04 lots) | EstLoss=$42.01
+21/06/2026 22:45:00.682 | Trade | Executing Market Order to Buy 4 XAUUSD (SL: 1050, TP: 2082)
+21/06/2026 22:45:00.682 | Trade | → Executing Market Order to Buy 4 XAUUSD (SL: 1050, TP: 2082) SUCCEEDED, Position PID1
+21/06/2026 22:45:00.682 | Info | [2026.07.21 18:35:41.128] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Higher Low + VAL Support + Buy Delta', Lot=4, SL=4143.41, TP=4174.73
+21/06/2026 23:35:52.916 | Info | [2026.07.21 18:35:41.140] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=1 | Side=Buy | Reason=StopLoss | Vol=4 units (0.04 lots) | Entry=4153.91 | SL=4143.41 | TP=4174.73 | GrossPnL=$-43.80 | NetPnL=$-44.76 | Swap=$0.00 | Comm=$-0.96
+25/06/2026 00:30:00.321 | Info | [2026.07.21 18:35:42.184] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Sell | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=23.63 (2362.7 pips) | Volume=2 units (0.02 lots) | EstLoss=$47.25
+25/06/2026 00:30:00.321 | Trade | Executing Market Order to Sell 2 XAUUSD (SL: 2363, TP: 4701)
+25/06/2026 00:30:00.321 | Trade | → Executing Market Order to Sell 2 XAUUSD (SL: 2363, TP: 4701) SUCCEEDED, Position PID2
+25/06/2026 00:30:00.321 | Info | [2026.07.21 18:35:42.184] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Sell Order Executed: Reason='Wyckoff Upthrust + VAH Resistance + Sell Delta Spike', Lot=2, SL=4020.05, TP=3949.41
+25/06/2026 13:00:09.963 | Info | [2026.07.21 18:35:42.386] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=2 | Side=Sell | Reason=StopLoss | Vol=2 units (0.02 lots) | Entry=3996.42 | SL=4020.05 | TP=3949.41 | GrossPnL=$-47.70 | NetPnL=$-48.18 | Swap=$0.00 | Comm=$-0.48
+25/06/2026 22:45:00.084 | Info | [2026.07.21 18:35:42.510] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Sell | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=9.15 (915.3 pips) | Volume=5 units (0.05 lots) | EstLoss=$45.77
+25/06/2026 22:45:00.084 | Trade | Executing Market Order to Sell 5 XAUUSD (SL: 915, TP: 1837)
+25/06/2026 22:45:00.084 | Trade | → Executing Market Order to Sell 5 XAUUSD (SL: 915, TP: 1837) SUCCEEDED, Position PID3
+25/06/2026 22:45:00.084 | Info | [2026.07.21 18:35:42.510] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Sell Order Executed: Reason='Wyckoff Upthrust + VAH Resistance + Sell Delta Spike', Lot=5, SL=4037.80, TP=4010.28
+26/06/2026 02:19:41.176 | Trade | Modifying position PID3 (SL: 4013.98, TP: 4010.28)
+26/06/2026 02:19:41.176 | Trade | → Modifying position PID3 (SL: 4013.98, TP: 4010.28) SUCCEEDED, Position PID3
+26/06/2026 02:19:49.601 | Info | [2026.07.21 18:35:42.606] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=3 | Side=Sell | Reason=TakeProfit | Vol=5 units (0.05 lots) | Entry=4028.65 | SL=4013.98 | TP=4010.28 | GrossPnL=$92.40 | NetPnL=$91.20 | Swap=$0.00 | Comm=$-1.20
+29/06/2026 13:30:00.082 | Info | [2026.07.21 18:35:43.141] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=8.22 (822.4 pips) | Volume=6 units (0.06 lots) | EstLoss=$49.35
+29/06/2026 13:30:00.082 | Trade | Executing Market Order to Buy 6 XAUUSD (SL: 822, TP: 1768)
+29/06/2026 13:30:00.082 | Trade | → Executing Market Order to Buy 6 XAUUSD (SL: 822, TP: 1768) SUCCEEDED, Position PID4
+29/06/2026 13:30:00.082 | Info | [2026.07.21 18:35:43.141] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Higher Low + VAL Support + Buy Delta', Lot=6, SL=4029.89, TP=4055.79
+29/06/2026 13:55:53.930 | Info | [2026.07.21 18:35:43.150] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=4 | Side=Buy | Reason=StopLoss | Vol=6 units (0.06 lots) | Entry=4038.11 | SL=4029.89 | TP=4055.79 | GrossPnL=$-49.50 | NetPnL=$-50.94 | Swap=$0.00 | Comm=$-1.44
+30/06/2026 11:30:00.342 | Info | [2026.07.21 18:35:43.441] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Sell | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=6.76 (675.9 pips) | Volume=7 units (0.07 lots) | EstLoss=$47.31
+30/06/2026 11:30:00.342 | Trade | Executing Market Order to Sell 7 XAUUSD (SL: 676, TP: 1373)
+30/06/2026 11:30:00.342 | Trade | → Executing Market Order to Sell 7 XAUUSD (SL: 676, TP: 1373) SUCCEEDED, Position PID5
+30/06/2026 11:30:00.342 | Info | [2026.07.21 18:35:43.441] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Sell Order Executed: Reason='Wyckoff Lower High + VAH Resistance + Sell Delta', Lot=7, SL=4038.81, TP=4018.32
+30/06/2026 12:23:59.710 | Trade | Modifying position PID5 (SL: 4021.15, TP: 4018.32)
+30/06/2026 12:23:59.710 | Trade | → Modifying position PID5 (SL: 4021.15, TP: 4018.32) SUCCEEDED, Position PID5
+30/06/2026 12:24:00.074 | Trade | Modifying position PID5 (SL: 4021.04, TP: 4018.32)
+30/06/2026 12:24:00.074 | Trade | → Modifying position PID5 (SL: 4021.04, TP: 4018.32) SUCCEEDED, Position PID5
+30/06/2026 12:24:00.444 | Info | [2026.07.21 18:35:43.452] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=5 | Side=Sell | Reason=TakeProfit | Vol=7 units (0.07 lots) | Entry=4032.05 | SL=4021.04 | TP=4018.32 | GrossPnL=$96.18 | NetPnL=$94.50 | Swap=$0.00 | Comm=$-1.68
+02/07/2026 09:45:00.338 | Info | [2026.07.21 18:35:44.052] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=9.36 (935.8 pips) | Volume=5 units (0.05 lots) | EstLoss=$46.79
+02/07/2026 09:45:00.338 | Trade | Executing Market Order to Buy 5 XAUUSD (SL: 936, TP: 1857)
+02/07/2026 09:45:00.338 | Trade | → Executing Market Order to Buy 5 XAUUSD (SL: 936, TP: 1857) SUCCEEDED, Position PID6
+02/07/2026 09:45:00.338 | Info | [2026.07.21 18:35:44.052] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Higher Low + VAL Support + Buy Delta', Lot=5, SL=4060.03, TP=4087.96
+02/07/2026 11:04:11.251 | Info | [2026.07.21 18:35:44.065] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=6 | Side=Buy | Reason=StopLoss | Vol=5 units (0.05 lots) | Entry=4069.39 | SL=4060.03 | TP=4087.96 | GrossPnL=$-46.90 | NetPnL=$-48.10 | Swap=$0.00 | Comm=$-1.20
+02/07/2026 19:15:00.102 | Info | [2026.07.21 18:35:44.177] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=10.04 (1004.4 pips) | Volume=4 units (0.04 lots) | EstLoss=$40.18
+02/07/2026 19:15:00.102 | Trade | Executing Market Order to Buy 4 XAUUSD (SL: 1004, TP: 1985)
+02/07/2026 19:15:00.102 | Trade | → Executing Market Order to Buy 4 XAUUSD (SL: 1004, TP: 1985) SUCCEEDED, Position PID7
+02/07/2026 19:15:00.102 | Info | [2026.07.21 18:35:44.177] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Higher Low + VAL Support + Buy Delta', Lot=4, SL=4104.58, TP=4134.47
+03/07/2026 00:13:51.496 | Info | [2026.07.21 18:35:44.238] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=7 | Side=Buy | Reason=TakeProfit | Vol=4 units (0.04 lots) | Entry=4114.62 | SL=4104.58 | TP=4134.47 | GrossPnL=$79.76 | NetPnL=$76.68 | Swap=$-2.12 | Comm=$-0.96
+03/07/2026 09:30:00.309 | Info | [2026.07.21 18:35:44.356] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=7.35 (735.3 pips) | Volume=6 units (0.06 lots) | EstLoss=$44.12
+03/07/2026 09:30:00.309 | Trade | Executing Market Order to Buy 6 XAUUSD (SL: 735, TP: 1426)
+03/07/2026 09:30:00.309 | Trade | → Executing Market Order to Buy 6 XAUUSD (SL: 735, TP: 1426) SUCCEEDED, Position PID8
+03/07/2026 09:30:00.309 | Info | [2026.07.21 18:35:44.356] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Higher Low + VAL Support + Buy Delta', Lot=6, SL=4164.81, TP=4186.42
+03/07/2026 13:13:12.373 | Info | [2026.07.21 18:35:44.388] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=8 | Side=Buy | Reason=StopLoss | Vol=6 units (0.06 lots) | Entry=4172.16 | SL=4164.81 | TP=4186.42 | GrossPnL=$-45.30 | NetPnL=$-46.74 | Swap=$0.00 | Comm=$-1.44
+05/07/2026 22:15:00.294 | Info | [2026.07.21 18:35:44.449] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=19.37 (1937.3 pips) | Volume=2 units (0.02 lots) | EstLoss=$38.75
+05/07/2026 22:15:00.294 | Trade | Executing Market Order to Buy 2 XAUUSD (SL: 1937, TP: 3857)
+05/07/2026 22:15:00.294 | Trade | → Executing Market Order to Buy 2 XAUUSD (SL: 1937, TP: 3857) SUCCEEDED, Position PID9
+05/07/2026 22:15:00.294 | Info | [2026.07.21 18:35:44.449] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Higher Low + VAL Support + Buy Delta', Lot=2, SL=4161.94, TP=4219.88
+06/07/2026 03:43:15.089 | Info | [2026.07.21 18:35:44.549] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=9 | Side=Buy | Reason=StopLoss | Vol=2 units (0.02 lots) | Entry=4181.31 | SL=4161.94 | TP=4219.88 | GrossPnL=$-38.80 | NetPnL=$-39.28 | Swap=$0.00 | Comm=$-0.48
+06/07/2026 11:30:00.159 | Info | [2026.07.21 18:35:44.643] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Sell | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=5.86 (586.1 pips) | Volume=8 units (0.08 lots) | EstLoss=$46.89
+06/07/2026 11:30:00.159 | Trade | Executing Market Order to Sell 8 XAUUSD (SL: 586, TP: 1163)
+06/07/2026 11:30:00.159 | Trade | → Executing Market Order to Sell 8 XAUUSD (SL: 586, TP: 1163) SUCCEEDED, Position PID10
+06/07/2026 11:30:00.159 | Info | [2026.07.21 18:35:44.643] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Sell Order Executed: Reason='Wyckoff Lower High + VAH Resistance + Sell Delta', Lot=8, SL=4160.90, TP=4143.41
+06/07/2026 12:32:49.951 | Info | [2026.07.21 18:35:44.658] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=10 | Side=Sell | Reason=TakeProfit | Vol=8 units (0.08 lots) | Entry=4155.04 | SL=4160.90 | TP=4143.41 | GrossPnL=$95.44 | NetPnL=$93.52 | Swap=$0.00 | Comm=$-1.92
+06/07/2026 15:30:00.273 | Info | [2026.07.21 18:35:44.706] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Sell | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=10.87 (1087.4 pips) | Volume=4 units (0.04 lots) | EstLoss=$43.49
+06/07/2026 15:30:00.273 | Trade | Executing Market Order to Sell 4 XAUUSD (SL: 1087, TP: 2097)
+06/07/2026 15:30:00.273 | Trade | → Executing Market Order to Sell 4 XAUUSD (SL: 1087, TP: 2097) SUCCEEDED, Position PID11
+06/07/2026 15:30:00.273 | Info | [2026.07.21 18:35:44.706] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Sell Order Executed: Reason='Wyckoff Lower High + VAH Resistance + Sell Delta', Lot=4, SL=4161.32, TP=4129.48
+06/07/2026 17:57:44.666 | Info | [2026.07.21 18:35:44.733] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=11 | Side=Sell | Reason=StopLoss | Vol=4 units (0.04 lots) | Entry=4150.45 | SL=4161.32 | TP=4129.48 | GrossPnL=$-43.72 | NetPnL=$-44.68 | Swap=$0.00 | Comm=$-0.96
+08/07/2026 01:15:00.200 | Info | [2026.07.21 18:35:45.121] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=13.99 (1398.7 pips) | Volume=3 units (0.03 lots) | EstLoss=$41.96
+08/07/2026 01:15:00.200 | Trade | Executing Market Order to Buy 3 XAUUSD (SL: 1399, TP: 2782)
+08/07/2026 01:15:00.200 | Trade | → Executing Market Order to Buy 3 XAUUSD (SL: 1399, TP: 2782) SUCCEEDED, Position PID12
+08/07/2026 01:15:00.200 | Info | [2026.07.21 18:35:45.121] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Higher Low + VAL Support + Buy Delta', Lot=3, SL=4094.67, TP=4136.48
+08/07/2026 08:17:57.146 | Info | [2026.07.21 18:35:45.221] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=12 | Side=Buy | Reason=StopLoss | Vol=3 units (0.03 lots) | Entry=4108.66 | SL=4094.67 | TP=4136.48 | GrossPnL=$-42.12 | NetPnL=$-42.84 | Swap=$0.00 | Comm=$-0.72
+09/07/2026 11:45:00.200 | Info | [2026.07.21 18:35:45.578] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Sell | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=6.32 (631.6 pips) | Volume=7 units (0.07 lots) | EstLoss=$44.21
+09/07/2026 11:45:00.200 | Trade | Executing Market Order to Sell 7 XAUUSD (SL: 632, TP: 1263)
+09/07/2026 11:45:00.200 | Trade | → Executing Market Order to Sell 7 XAUUSD (SL: 632, TP: 1263) SUCCEEDED, Position PID13
+09/07/2026 11:45:00.200 | Info | [2026.07.21 18:35:45.578] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Sell Order Executed: Reason='Wyckoff Lower High + VAH Resistance + Sell Delta', Lot=7, SL=4112.63, TP=4093.68
+09/07/2026 12:07:59.853 | Info | [2026.07.21 18:35:45.582] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=13 | Side=Sell | Reason=StopLoss | Vol=7 units (0.07 lots) | Entry=4106.31 | SL=4112.63 | TP=4093.68 | GrossPnL=$-45.78 | NetPnL=$-47.46 | Swap=$0.00 | Comm=$-1.68
+13/07/2026 01:30:00.320 | Info | [2026.07.21 18:35:46.013] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Sell | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=13.13 (1313.4 pips) | Volume=3 units (0.03 lots) | EstLoss=$39.40
+13/07/2026 01:30:00.320 | Trade | Executing Market Order to Sell 3 XAUUSD (SL: 1313, TP: 2594)
+13/07/2026 01:30:00.320 | Trade | → Executing Market Order to Sell 3 XAUUSD (SL: 1313, TP: 2594) SUCCEEDED, Position PID14
+13/07/2026 01:30:00.320 | Info | [2026.07.21 18:35:46.014] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Sell Order Executed: Reason='Wyckoff Lower High + VAH Resistance + Sell Delta', Lot=3, SL=4092.90, TP=4053.83
+13/07/2026 03:12:24.704 | Info | [2026.07.21 18:35:46.043] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=14 | Side=Sell | Reason=TakeProfit | Vol=3 units (0.03 lots) | Entry=4079.77 | SL=4092.90 | TP=4053.83 | GrossPnL=$78.33 | NetPnL=$77.61 | Swap=$0.00 | Comm=$-0.72
+17/07/2026 05:30:00.035 | Info | [2026.07.21 18:35:47.401] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=8.00 (800.4 pips) | Volume=6 units (0.06 lots) | EstLoss=$48.02
+17/07/2026 05:30:00.035 | Trade | Executing Market Order to Buy 6 XAUUSD (SL: 800, TP: 1571)
+17/07/2026 05:30:00.035 | Trade | → Executing Market Order to Buy 6 XAUUSD (SL: 800, TP: 1571) SUCCEEDED, Position PID15
+17/07/2026 05:30:00.035 | Info | [2026.07.21 18:35:47.401] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Higher Low + VAL Support + Buy Delta', Lot=6, SL=3972.00, TP=3995.71
+17/07/2026 06:11:05.803 | Info | [2026.07.21 18:35:47.412] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=15 | Side=Buy | Reason=TakeProfit | Vol=6 units (0.06 lots) | Entry=3980.00 | SL=3972.00 | TP=3995.71 | GrossPnL=$97.62 | NetPnL=$96.18 | Swap=$0.00 | Comm=$-1.44
+17/07/2026 11:15:00.088 | Info | [2026.07.21 18:35:47.468] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=5.60 (559.9 pips) | Volume=8 units (0.08 lots) | EstLoss=$44.79
+17/07/2026 11:15:00.088 | Trade | Executing Market Order to Buy 8 XAUUSD (SL: 560, TP: 1099)
+17/07/2026 11:15:00.088 | Trade | → Executing Market Order to Buy 8 XAUUSD (SL: 560, TP: 1099) SUCCEEDED, Position PID16
+17/07/2026 11:15:00.088 | Info | [2026.07.21 18:35:47.468] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Spring + VAL Support + Buy Delta Spike', Lot=8, SL=3986.25, TP=4002.84
+17/07/2026 12:22:00.254 | Info | [2026.07.21 18:35:47.480] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=16 | Side=Buy | Reason=StopLoss | Vol=8 units (0.08 lots) | Entry=3991.85 | SL=3986.25 | TP=4002.84 | GrossPnL=$-45.20 | NetPnL=$-47.12 | Swap=$0.00 | Comm=$-1.92
+17/07/2026 13:45:00.170 | Info | [2026.07.21 18:35:47.498] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Sell | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=19.83 (1982.9 pips) | Volume=2 units (0.02 lots) | EstLoss=$39.66
+17/07/2026 13:45:00.170 | Trade | Executing Market Order to Sell 2 XAUUSD (SL: 1983, TP: 4050)
+17/07/2026 13:45:00.170 | Trade | → Executing Market Order to Sell 2 XAUUSD (SL: 1983, TP: 4050) SUCCEEDED, Position PID17
+17/07/2026 13:45:00.170 | Info | [2026.07.21 18:35:47.498] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Sell Order Executed: Reason='Wyckoff Lower High + VAH Resistance + Sell Delta', Lot=2, SL=4005.15, TP=3944.82
+17/07/2026 15:04:25.488 | Info | [2026.07.21 18:35:47.518] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=17 | Side=Sell | Reason=StopLoss | Vol=2 units (0.02 lots) | Entry=3985.32 | SL=4005.15 | TP=3944.82 | GrossPnL=$-42.06 | NetPnL=$-42.54 | Swap=$0.00 | Comm=$-0.48
+19/07/2026 22:45:00.653 | Info | [2026.07.21 18:35:47.590] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Sell | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=22.42 (2241.9 pips) | Volume=2 units (0.02 lots) | EstLoss=$44.84
+19/07/2026 22:45:00.653 | Trade | Executing Market Order to Sell 2 XAUUSD (SL: 2242, TP: 4481)
+19/07/2026 22:45:00.653 | Trade | → Executing Market Order to Sell 2 XAUUSD (SL: 2242, TP: 4481) SUCCEEDED, Position PID18
+19/07/2026 22:45:00.653 | Info | [2026.07.21 18:35:47.590] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Sell Order Executed: Reason='Wyckoff Lower High + VAH Resistance + Sell Delta', Lot=2, SL=4019.30, TP=3952.07
+20/07/2026 01:11:07.850 | Info | [2026.07.21 18:35:47.655] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=18 | Side=Sell | Reason=StopLoss | Vol=2 units (0.02 lots) | Entry=3996.88 | SL=4019.30 | TP=3952.07 | GrossPnL=$-45.12 | NetPnL=$-45.60 | Swap=$0.00 | Comm=$-0.48
+20/07/2026 07:45:00.270 | Info | [2026.07.21 18:35:47.728] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Sell | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=5.33 (532.9 pips) | Volume=9 units (0.09 lots) | EstLoss=$47.96
+20/07/2026 07:45:00.270 | Trade | Executing Market Order to Sell 9 XAUUSD (SL: 533, TP: 1198)
+20/07/2026 07:45:00.270 | Trade | → Executing Market Order to Sell 9 XAUUSD (SL: 533, TP: 1198) SUCCEEDED, Position PID19
+20/07/2026 07:45:00.270 | Info | [2026.07.21 18:35:47.728] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Sell Order Executed: Reason='Wyckoff Lower High + VAH Resistance + Sell Delta', Lot=9, SL=4026.86, TP=4009.55
+20/07/2026 08:16:57.424 | Info | [2026.07.21 18:35:47.734] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=19 | Side=Sell | Reason=StopLoss | Vol=9 units (0.09 lots) | Entry=4021.53 | SL=4026.86 | TP=4009.55 | GrossPnL=$-50.49 | NetPnL=$-52.65 | Swap=$0.00 | Comm=$-2.16
+20/07/2026 13:45:00.057 | Info | [2026.07.21 18:35:47.794] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=7.88 (788.1 pips) | Volume=6 units (0.06 lots) | EstLoss=$47.29
+20/07/2026 13:45:00.057 | Trade | Executing Market Order to Buy 6 XAUUSD (SL: 788, TP: 1519)
+20/07/2026 13:45:00.057 | Trade | → Executing Market Order to Buy 6 XAUUSD (SL: 788, TP: 1519) SUCCEEDED, Position PID20
+20/07/2026 13:45:00.057 | Info | [2026.07.21 18:35:47.794] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Higher Low + VAL Support + Buy Delta', Lot=6, SL=4005.27, TP=4028.34
+20/07/2026 14:00:13.794 | Info | [2026.07.21 18:35:47.797] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=20 | Side=Buy | Reason=StopLoss | Vol=6 units (0.06 lots) | Entry=4013.15 | SL=4005.27 | TP=4028.34 | GrossPnL=$-50.52 | NetPnL=$-51.96 | Swap=$0.00 | Comm=$-1.44
+20/07/2026 22:30:00.065 | Info | [2026.07.21 18:35:47.876] [GoldFlowWyckoff] [INFO] [RISK EXECUTE] Side=Buy | SizeMode=RiskAmount | TargetRisk=$50.00 | SLDist=5.56 (555.5 pips) | Volume=9 units (0.09 lots) | EstLoss=$50.00
+20/07/2026 22:30:00.065 | Trade | Executing Market Order to Buy 9 XAUUSD (SL: 556, TP: 1075)
+20/07/2026 22:30:00.065 | Trade | → Executing Market Order to Buy 9 XAUUSD (SL: 556, TP: 1075) SUCCEEDED, Position PID21
+20/07/2026 22:30:00.065 | Info | [2026.07.21 18:35:47.876] [GoldFlowWyckoff] [INFO] [GoldFlowWyckoff] Buy Order Executed: Reason='Wyckoff Higher Low + VAL Support + Buy Delta', Lot=9, SL=4004.38, TP=4020.69
+20/07/2026 22:41:54.740 | Info | [2026.07.21 18:35:47.880] [GoldFlowWyckoff] [INFO] [POSITION CLOSED] Id=21 | Side=Buy | Reason=StopLoss | Vol=9 units (0.09 lots) | Entry=4009.94 | SL=4004.38 | TP=4020.69 | GrossPnL=$-50.22 | NetPnL=$-52.38 | Swap=$0.00 | Comm=$-2.16
+20/07/2026 23:59:59.763 | Info | CBot instance [GoldFlowWyckoff, XAUUSD, m15] stopped.

@@ -394,76 +394,49 @@ namespace RedWave.Common
                 return 0.0;
             }
 
-            double pipSize = PriceUtils.GetPipSize(_symbol);
-            if (pipSize <= 0) return 0.0;
-
-            double slPips = slPriceDistance / pipSize;
-            if (slPips < 0.1) return 0.0;
-
-            double volumeFixed = 0;
-            try { volumeFixed = _symbol.VolumeForFixedRisk(riskMoney, slPips, RoundingMode.Down); }
-            catch (Exception ex) { _logger?.Warn($"RiskManager: VolumeForFixedRisk failed: {ex.Message}"); }
-
-            double volumeTick = 0;
-            double lossPerUnitTick = LossPerUnitFromTicks(slPriceDistance);
-            if (lossPerUnitTick > 0)
-                volumeTick = riskMoney / lossPerUnitTick;
-
-            double volume;
-            if (volumeFixed > 0 && volumeTick > 0)
+            // 1. Calculate monetary loss for 1 unit of volume over slPriceDistance
+            double lossPerUnit = PriceUtils.PriceToAmount(slPriceDistance, 1.0, _symbol);
+            if (lossPerUnit <= 0)
             {
-                if (volumeTick > volumeFixed * 3.0) volume = volumeFixed;
-                else if (volumeFixed > volumeTick * 3.0) volume = Math.Min(volumeFixed, volumeTick);
-                else volume = volumeFixed;
-            }
-            else if (volumeFixed > 0) volume = volumeFixed;
-            else if (volumeTick > 0) volume = volumeTick;
-            else return 0.0;
-
-            volume = NormalizeVolume(volume);
-            if (volume <= 0) return 0.0;
-
-            // Conservative cap: if $1 price move ≈ $1 per unit (typical XAU unit=oz),
-            // vol should be ≤ riskMoney / slDist. When FixedRisk oversizes, take the min.
-            double volByPrice = riskMoney / slPriceDistance;
-            double volByPriceN = NormalizeVolume(volByPrice);
-            if (volByPriceN > 0 && volume > volByPriceN * 1.15)
-            {
-                _logger?.Warn(
-                    $"RiskManager: FixedRisk vol {volume:F0} >> price-unit vol {volByPriceN:F0} " +
-                    $"(slDist={slPriceDistance:F2}, risk$={riskMoney:F0}) — using conservative size");
-                volume = volByPriceN;
+                _logger?.Error("RiskManager: Cannot calculate loss per unit from symbol.");
+                return 0.0;
             }
 
-            expectedRiskOut = EstimateRiskMoney(volume, slPips, riskMoney, volumeFixed);
-            // Prefer money estimate from price units when we used conservative size
-            double priceUnitRisk = volume * slPriceDistance;
-            if (priceUnitRisk > 0 && (expectedRiskOut <= 0 || Math.Abs(priceUnitRisk - expectedRiskOut) > expectedRiskOut * 0.5))
-                expectedRiskOut = priceUnitRisk;
+            // 2. Exact volume in UNITS required to achieve target riskMoney
+            double idealVolumeInUnits = riskMoney / lossPerUnit;
 
-            try
+            // 3. Normalize volume to broker VolumeInUnits limits (Min, Step, Max)
+            double volume = NormalizeVolume(idealVolumeInUnits);
+            if (volume <= 0)
             {
-                double maxVol = _symbol.VolumeForFixedRisk(riskMoney * 1.5, slPips, RoundingMode.Down);
-                if (maxVol > 0 && volume > maxVol)
-                {
-                    volume = NormalizeVolume(maxVol);
-                    expectedRiskOut = volume * slPriceDistance;
-                }
+                double minVol = _symbol.VolumeInUnitsMin;
+                double minVolRisk = PriceUtils.PriceToAmount(slPriceDistance, minVol, _symbol);
+                _logger?.Warn($"RiskManager CANCEL: Target risk ${riskMoney:F2} is below minimum trade size risk (${minVolRisk:F2} for {minVol} units / {minVol / _symbol.LotSize:F2} lots). Skipping trade.");
+                return 0.0;
             }
-            catch { /* ignore */ }
 
-            if (expectedRiskOut > riskMoney * 1.5)
+            // 4. Calculate actual expected risk in Account Currency for normalized volume
+            expectedRiskOut = PriceUtils.PriceToAmount(slPriceDistance, volume, _symbol);
+
+            // 5. HARD SAFETY CAP: Never allow execution if expected risk exceeds target by > 5%
+            if (expectedRiskOut > riskMoney * 1.05)
             {
-                // Scale volume down to fit riskMoney
                 double scale = riskMoney / expectedRiskOut;
-                volume = NormalizeVolume(volume * scale);
-                expectedRiskOut = volume * slPriceDistance;
-                if (volume <= 0 || expectedRiskOut > riskMoney * 1.5)
+                double scaledVolume = NormalizeVolume(volume * scale);
+                double scaledRisk = PriceUtils.PriceToAmount(slPriceDistance, scaledVolume, _symbol);
+
+                if (scaledVolume <= 0 || scaledRisk > riskMoney * 1.05)
                 {
-                    _logger?.Error($"RiskManager: SAFETY ABORT risk=${expectedRiskOut:F2} vol={volume}");
+                    _logger?.Warn($"RiskManager SAFETY ABORT: Risk ${expectedRiskOut:F2} exceeds target ${riskMoney:F2}. Skipping trade to prevent over-risking.");
+                    expectedRiskOut = 0;
                     return 0.0;
                 }
+
+                volume = scaledVolume;
+                expectedRiskOut = scaledRisk;
             }
+
+            _logger?.Debug($"RiskManager: Target ${riskMoney:F2} (SL dist={slPriceDistance:F2}) -> Vol={volume} units ({volume / _symbol.LotSize:F2} lots), Est. Loss=${expectedRiskOut:F2}");
             return volume;
         }
 

@@ -85,6 +85,25 @@ namespace cAlgo.Robots
         [Parameter("Visualize Profile", Group = "Strategy & Profile", DefaultValue = true)]
         public bool VisualizeProfile { get; set; }
 
+        // ─── Volume Profile V2 ──────────────────────────────
+        [Parameter("VP Bin Size", Group = "Volume Profile V2", DefaultValue = 0.5, MinValue = 0.00001)]
+        public double VpBinSize { get; set; }
+
+        [Parameter("VP Lookback (Days)", Group = "Volume Profile V2", DefaultValue = 4, MinValue = 1, MaxValue = 30)]
+        public int VpLookbackDays { get; set; }
+
+        [Parameter("VP Value Area %", Group = "Volume Profile V2", DefaultValue = 0.70, MinValue = 0.1, MaxValue = 0.99)]
+        public double VpValueAreaPercent { get; set; }
+
+        [Parameter("Use M1 Source Bars", Group = "Volume Profile V2", DefaultValue = true)]
+        public bool UseM1SourceBars { get; set; }
+
+        [Parameter("Use Gaussian Smooth", Group = "Volume Profile V2", DefaultValue = true)]
+        public bool UseGaussianSmooth { get; set; }
+
+        [Parameter("Require POC Delta Confluence", Group = "Volume Profile V2", DefaultValue = false)]
+        public bool RequirePocDeltaConfluence { get; set; }
+
         // ─── Stop Loss ──────────────────────────────────────
         [Parameter("ATR Period", Group = "Stop Loss", DefaultValue = 14, MinValue = 5)]
         public int AtrPeriod { get; set; }
@@ -157,10 +176,11 @@ namespace cAlgo.Robots
         private CRiskManager _riskManager;
         private CSessionFilter _sessionFilter;
         private CTrailingManager _trailingManager;
-        private CVolumeProfile _volumeProfile;
+        private CVolumeProfileV2 _volumeProfile;
         private CTickDeltaEngine _tickDeltaEngine;
         private AverageTrueRange _atr;
         private Bars _htfBars;
+        private Bars _m1Bars;
         private int _tradesToday;
         private int _lastTradeDay;
 
@@ -188,9 +208,10 @@ namespace cAlgo.Robots
             _trailingManager = new CTrailingManager();
             _trailingManager.Init(this, Symbol, BotLabel, _logger);
 
-            _volumeProfile = new CVolumeProfile();
-            _volumeProfile.Init(Bars, Chart, 100, VisualizeProfile, _logger);
-            _volumeProfile.ConfigureComposite(0.5, 4, 0.70);
+            _m1Bars = UseM1SourceBars ? MarketData.GetBars(TimeFrame.Minute, SymbolName) : null;
+            _volumeProfile = new CVolumeProfileV2();
+            _volumeProfile.Init(Bars, _m1Bars, Chart, 100, VisualizeProfile, _logger);
+            _volumeProfile.ConfigureComposite(binSize: VpBinSize, lookbackDays: VpLookbackDays, valueAreaPercent: VpValueAreaPercent, useGaussianSmooth: UseGaussianSmooth);
 
             _tickDeltaEngine = new CTickDeltaEngine();
             _tickDeltaEngine.Init(50000, _logger);
@@ -264,6 +285,7 @@ namespace cAlgo.Robots
                 SellImbalance = sellImb,
                 VolumeSpikeMultiplier = VolumeSpikeMultiplier,
                 PocProximityPips = PocProximityPips,
+                RequirePocDeltaConfluence = RequirePocDeltaConfluence,
                 NodeSlBufferPips = NodeSlBufferPips,
                 MinSlAtrMult = MinSlAtrMult,
                 TakeProfitMode = TakeProfitMode,
@@ -333,9 +355,10 @@ namespace cAlgo.Robots
                 Chart.DrawIcon(markerId, icon, Bars.Count - 1, ctx.BarClose, col);
             }
 
-            var tradeResult = ExecuteMarketOrder(tradeType, SymbolName, volume, BotLabel, result.StopLossPrice, result.TakeProfitPrice);
-            if (tradeResult.IsSuccessful)
+            var tradeResult = ExecuteMarketOrder(tradeType, SymbolName, volume, BotLabel);
+            if (tradeResult.IsSuccessful && tradeResult.Position != null)
             {
+                ModifyPosition(tradeResult.Position, result.StopLossPrice, result.TakeProfitPrice, ProtectionType.Absolute);
                 _tradesToday++;
                 _logger.Info($"Order Executed Successfully: ID={tradeResult.Position.Id}");
             }
@@ -383,14 +406,15 @@ namespace cAlgo.Robots
             double poc = profile != null && profile.IsValid ? profile.POC : 0;
             double vah = profile != null && profile.IsValid ? profile.VAH : 0;
             double val = profile != null && profile.IsValid ? profile.VAL : 0;
+            double pocDelta = profile != null && profile.IsValid ? profile.PocDelta : 0;
             double cvd = _tickDeltaEngine.GetCvd(DeltaWindowMinutes * 60 * 1000L);
             double spikeRatio = profile != null ? SignalEngine.CalculateVolumeSpikeRatio(profile) : 0;
 
             string hud = $"======================================\n" +
-                        $" 🎛️ PocAbsorption (PADR v1.0) - {SymbolName}\n" +
+                        $" 🎛️ PocAbsorption (PADR v2.0) - {SymbolName}\n" +
                         $"======================================\n" +
                         $" 🌐 Session Window: {sessionStr}\n" +
-                        $" 📊 POC: {poc:F2} | VAH: {vah:F2} | VAL: {val:F2}\n" +
+                        $" 📊 POC: {poc:F2} (Δ: {pocDelta:+0.0;-0.0}) | VAH: {vah:F2} | VAL: {val:F2}\n" +
                         $" ⚡ Vol Spike Ratio: {spikeRatio:F2}x (Req: >= {VolumeSpikeMultiplier:F2}x)\n" +
                         $" 📈 CVD ({DeltaWindowMinutes}m): {cvd:+0;-0;0}\n" +
                         $" 🛡️ Exit Controls: BE={(UseBreakEven ? $"{BeStartR:F2}R" : "off")} | Trail={(UseTrailing ? $"{TrailStartR:F2}R" : "off")}\n" +

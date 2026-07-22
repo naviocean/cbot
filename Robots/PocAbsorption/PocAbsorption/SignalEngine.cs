@@ -41,6 +41,7 @@ namespace cAlgo.Robots
         // Strategy Parameters
         public double VolumeSpikeMultiplier { get; set; } = 1.5;
         public double PocProximityPips { get; set; } = 15.0;
+        public bool RequirePocDeltaConfluence { get; set; } = false;
         public double NodeSlBufferPips { get; set; } = 8.0;
         public double MinSlAtrMult { get; set; } = 0.8;
 
@@ -152,8 +153,9 @@ namespace cAlgo.Robots
             bool isLongRejection = isLongProximity && ctx.BarClose > poc && (ctx.BarClose >= ctx.BarOpen);
             bool isLongDeltaDivergence = ctx.Cvd > 0 || ctx.BuyImbalance > ctx.SellImbalance;
             bool isLongHtfOk = !ctx.RequireHtfFilter || ctx.HtfTrend == HtfBias.Bullish;
+            bool isLongPocDeltaOk = !ctx.RequirePocDeltaConfluence || (ctx.Profile != null && ctx.Profile.PocDelta > 0);
 
-            if (isLongRejection && isLongDeltaDivergence && isLongHtfOk)
+            if (isLongRejection && isLongDeltaDivergence && isLongHtfOk && isLongPocDeltaOk)
             {
                 double sl = nodeBottom - (ctx.NodeSlBufferPips * ctx.PipSize);
                 double minSlDist = Math.Max(ctx.BarClose - sl, ctx.Atr * ctx.MinSlAtrMult);
@@ -177,8 +179,9 @@ namespace cAlgo.Robots
             bool isShortRejection = isShortProximity && ctx.BarClose < poc && (ctx.BarClose <= ctx.BarOpen);
             bool isShortDeltaDivergence = ctx.Cvd < 0 || ctx.SellImbalance > ctx.BuyImbalance;
             bool isShortHtfOk = !ctx.RequireHtfFilter || ctx.HtfTrend == HtfBias.Bearish;
+            bool isShortPocDeltaOk = !ctx.RequirePocDeltaConfluence || (ctx.Profile != null && ctx.Profile.PocDelta < 0);
 
-            if (isShortRejection && isShortDeltaDivergence && isShortHtfOk)
+            if (isShortRejection && isShortDeltaDivergence && isShortHtfOk && isShortPocDeltaOk)
             {
                 double sl = nodeTop + (ctx.NodeSlBufferPips * ctx.PipSize);
                 double minSlDist = Math.Max(sl - ctx.BarClose, ctx.Atr * ctx.MinSlAtrMult);

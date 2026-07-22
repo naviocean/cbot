@@ -70,16 +70,37 @@ namespace RedWave.Common
         public int LookbackDays { get; set; }
         public bool IsValid { get; set; }
 
+        // === BỔ SUNG MỚI: Order Flow Delta Extensions (v2.0) ===
+        public double[] UpHistogram { get; set; }    // Buy Volume per Bin
+        public double[] DownHistogram { get; set; }  // Sell Volume per Bin
+        public double[] DeltaHistogram { get; set; } // Net Delta (Buy - Sell) per Bin
+        public double PocUpVolume { get; set; }      // Buy Volume riêng tại POC
+        public double PocDownVolume { get; set; }    // Sell Volume riêng tại POC
+        public double PocDelta => PocUpVolume - PocDownVolume; // Net Delta tại POC
+        public bool HasOrderFlowData { get; set; }   // True nếu được tính từ Order Flow / Source Bars
+
         public ProfileData()
         {
             Histogram = Array.Empty<double>();
+            UpHistogram = Array.Empty<double>();
+            DownHistogram = Array.Empty<double>();
+            DeltaHistogram = Array.Empty<double>();
             Hvns = new List<VolumeNode>();
             Lvns = new List<VolumeNode>();
             BuiltAt = DateTime.MinValue;
             IsValid = false;
+            PocUpVolume = 0;
+            PocDownVolume = 0;
+            HasOrderFlowData = false;
         }
 
         public int BinCount => Histogram?.Length ?? 0;
+
+        public double GetBinBuyVolume(int bin) => UpHistogram != null && bin >= 0 && bin < UpHistogram.Length ? UpHistogram[bin] : 0;
+
+        public double GetBinSellVolume(int bin) => DownHistogram != null && bin >= 0 && bin < DownHistogram.Length ? DownHistogram[bin] : 0;
+
+        public double GetBinDelta(int bin) => DeltaHistogram != null && bin >= 0 && bin < DeltaHistogram.Length ? DeltaHistogram[bin] : 0;
 
         public double BinLow(int bin) => MinPrice + bin * BinSize;
 
