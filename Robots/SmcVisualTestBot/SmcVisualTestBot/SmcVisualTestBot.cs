@@ -17,6 +17,9 @@ namespace cAlgo.Robots
         [Parameter("Enable FVG Logic", Group = "1. Logic Switches", DefaultValue = true)]
         public bool EnableFvgLogic { get; set; }
 
+        [Parameter("Enable Inversion FVG (iFVG)", Group = "1. Logic Switches", DefaultValue = true)]
+        public bool EnableInversionFvg { get; set; }
+
         [Parameter("Enable Structure Logic", Group = "1. Logic Switches", DefaultValue = true)]
         public bool EnableStructureLogic { get; set; }
 
@@ -50,6 +53,9 @@ namespace cAlgo.Robots
         [Parameter("Show FVG Boxes", Group = "3. Visual Render", DefaultValue = true)]
         public bool ShowFvgVisuals { get; set; }
 
+        [Parameter("Show Inversion FVG (iFVG) Boxes", Group = "3. Visual Render", DefaultValue = true)]
+        public bool ShowIfvgVisuals { get; set; }
+
         [Parameter("Show Structure Lines", Group = "3. Visual Render", DefaultValue = true)]
         public bool ShowStructureVisuals { get; set; }
 
@@ -72,6 +78,7 @@ namespace cAlgo.Robots
         {
             _smcMatrix = new SmcConfluenceMatrix();
             _smcMatrix.FvgEngine.MinGapPips = MinFvgPips;
+            _smcMatrix.FvgEngine.EnableInversionFvg = EnableInversionFvg;
             _smcMatrix.FvgEngine.MitigationMode = MitigationMode;
             _smcMatrix.StructureEngine.PivotPeriod = PivotPeriod;
             _smcMatrix.StructureEngine.RequireBodyClose = RequireBodyBreak;
@@ -114,10 +121,10 @@ namespace cAlgo.Robots
 
         private void RenderVisuals()
         {
-            if (ShowFvgVisuals && EnableFvgLogic)
+            if (EnableFvgLogic)
             {
                 foreach (var fvg in _smcMatrix.FvgEngine.AllFvgs)
-                    _renderer.DrawFvg(fvg, true, autoClean: true);
+                    _renderer.DrawFvg(fvg, ShowFvgVisuals, ShowIfvgVisuals, autoClean: true);
             }
 
             if (ShowStructureVisuals && EnableStructureLogic)
@@ -139,7 +146,7 @@ namespace cAlgo.Robots
             }
 
             string zoneText = _smcMatrix.RangeEngine.GetZone(Symbol.Ask).ToString();
-            Chart.DrawStaticText("SMC_BOT_PANEL", $"[SMC Bot] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count()} | Unicorns: {_smcMatrix.UnicornDetector.DetectedUnicorns.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Gold);
+            Chart.DrawStaticText("SMC_BOT_PANEL", $"[SMC Bot] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count(f => !f.IsInversion)} | iFVGs: {_smcMatrix.FvgEngine.InversionFvgs.Count()} | Unicorns: {_smcMatrix.UnicornDetector.DetectedUnicorns.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Gold);
         }
     }
 }

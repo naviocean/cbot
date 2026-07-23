@@ -17,6 +17,9 @@ namespace cAlgo.Indicators
         [Parameter("Enable FVG", Group = "1. Logic Engines", DefaultValue = true)]
         public bool EnableFvg { get; set; }
 
+        [Parameter("Enable Inversion FVG (iFVG)", Group = "1. Logic Engines", DefaultValue = true)]
+        public bool EnableInversionFvg { get; set; }
+
         [Parameter("Enable Structure (BOS/MSS)", Group = "1. Logic Engines", DefaultValue = true)]
         public bool EnableStructure { get; set; }
 
@@ -47,8 +50,11 @@ namespace cAlgo.Indicators
         // ==========================================
         // PARAMETERS: VISUAL TOGGLES
         // ==========================================
-        [Parameter("Show FVG Visuals", Group = "3. Visual Render", DefaultValue = true)]
+        [Parameter("Show Standard FVG Visuals", Group = "3. Visual Render", DefaultValue = true)]
         public bool ShowFvgVisuals { get; set; }
+
+        [Parameter("Show Inversion FVG (iFVG) Visuals", Group = "3. Visual Render", DefaultValue = true)]
+        public bool ShowIfvgVisuals { get; set; }
 
         [Parameter("Show Structure Lines", Group = "3. Visual Render", DefaultValue = true)]
         public bool ShowStructureVisuals { get; set; }
@@ -63,6 +69,7 @@ namespace cAlgo.Indicators
         {
             _smcMatrix = new SmcConfluenceMatrix();
             _smcMatrix.FvgEngine.MinGapPips = MinFvgPips;
+            _smcMatrix.FvgEngine.EnableInversionFvg = EnableInversionFvg;
             _smcMatrix.FvgEngine.MitigationMode = MitigationMode;
             _smcMatrix.StructureEngine.PivotPeriod = PivotPeriod;
             _smcMatrix.StructureEngine.RequireBodyClose = RequireBodyBreak;
@@ -82,10 +89,10 @@ namespace cAlgo.Indicators
                     _smcMatrix.OnBar(Bars, i, Symbol.PipSize);
                 }
 
-                if (ShowFvgVisuals && EnableFvg)
+                if (EnableFvg)
                 {
                     foreach (var fvg in _smcMatrix.FvgEngine.AllFvgs)
-                        _renderer.DrawFvg(fvg, true, autoClean: true);
+                        _renderer.DrawFvg(fvg, ShowFvgVisuals, ShowIfvgVisuals, autoClean: true);
                 }
 
                 if (ShowStructureVisuals && EnableStructure)
@@ -107,7 +114,7 @@ namespace cAlgo.Indicators
                 }
 
                 string zoneText = _smcMatrix.RangeEngine.GetZone(Symbol.Ask).ToString();
-                Chart.DrawStaticText("SMC_PANEL", $"[SMC Indicator] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count()} | NWOG Gaps: {_smcMatrix.NwogEngine.ActiveGaps.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Cyan);
+                Chart.DrawStaticText("SMC_PANEL", $"[SMC Indicator] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count(f => !f.IsInversion)} | iFVGs: {_smcMatrix.FvgEngine.InversionFvgs.Count()} | NWOG Gaps: {_smcMatrix.NwogEngine.ActiveGaps.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Cyan);
             }
         }
     }

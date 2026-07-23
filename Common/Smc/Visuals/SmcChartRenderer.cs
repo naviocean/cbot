@@ -41,12 +41,14 @@ namespace RedWave.Common.Smc
             _chart = chart;
         }
 
-        public void DrawFvg(FairValueGap fvg, bool showVisual, bool autoClean = true)
+        public void DrawFvg(FairValueGap fvg, bool showVisual, bool showIfvgVisual = true, bool autoClean = true)
         {
             if (_chart == null) return;
             string key = $"SMC_FVG_{fvg.Id}";
 
-            if (!showVisual || (autoClean && (fvg.Status == FvgStatus.Mitigated || fvg.Status == FvgStatus.Invalidated)))
+            bool isIfvg = fvg.IsInversion || fvg.Status == FvgStatus.Inversion;
+
+            if (!showVisual || (isIfvg && !showIfvgVisual) || (autoClean && (fvg.Status == FvgStatus.Mitigated || fvg.Status == FvgStatus.Invalidated)))
             {
                 _chart.RemoveObject(key);
                 _chart.RemoveObject(key + "_TXT");
@@ -57,7 +59,7 @@ namespace RedWave.Common.Smc
             Color textCol;
             string label;
 
-            if (fvg.IsInversion || fvg.Status == FvgStatus.Inversion)
+            if (isIfvg)
             {
                 color = fvg.Direction == TradeType.Buy ? BullishIfvgColor : BearishIfvgColor;
                 textCol = fvg.Direction == TradeType.Buy ? Color.LimeGreen : Color.Crimson;
