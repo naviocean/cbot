@@ -2,7 +2,7 @@
 
 **Status:** Implemented (code of record: `Robots/VacuumHunter`, `Common/*`)  
 **Platform:** cTrader cBot  
-**Spec version:** v1.2 (aligned with code)  
+**Spec version:** v1.6 (aligned with code: VP2, RiskAmount, SlTimeFrame ATR buffer)  
 **Date:** 2026-07  
 
 ---
@@ -166,9 +166,10 @@ Signal evaluated **on closed bar only** (`SignalEngine`).
 | Mode | Behavior |
 | --- | --- |
 | **RiskPercent** (default) | risk $ = Balance × Risk% / 100; volume via FixedRisk + conservative `vol ≤ risk$/slDist` |
-| **FixedLots** | volume = FixedLots × LotSize (normalized); still scaled down if estimated risk &gt; daily room |
+| **RiskAmount** | risk $ = RiskAmount ($); volume via FixedRisk + conservative `vol ≤ risk$/slDist` |
+| **FixedLots** | volume = FixedLots × LotSize (normalized); still scaled down if estimated risk > daily room |
 
-- If Max Daily Loss $ &gt; 0: remaining room = MaxDailyLoss + (Equity − dayStartEquity); both modes respect room (abort or scale).  
+- If Max Daily Loss $ > 0: remaining room = MaxDailyLoss + (Equity − dayStartEquity); all modes respect room (abort or scale).  
 - Never force min volume when it would oversize risk.
 
 ### Account risk runtime (`CRiskManager`)
@@ -189,8 +190,9 @@ Signal evaluated **on closed bar only** (`SignalEngine`).
 | --- | --- |
 | Enable Trading | true |
 | Bot Label | VacuumHunter |
-| Lot Size Mode | RiskPercent (default) \| FixedLots |
+| Lot Size Mode | RiskPercent (default) \| RiskAmount \| FixedLots |
 | Risk % | 0.75 (when RiskPercent) |
+| Risk Amount ($) | 50.0 (when RiskAmount) |
 | Fixed Lots | 0.01 (when FixedLots) |
 | Max Trades / Day | 2 |
 | Max Spread (pips) | 80 |
@@ -202,15 +204,15 @@ Signal evaluated **on closed bar only** (`SignalEngine`).
 | Flatten On Daily Profit | false |
 | Debug Logging | false |
 
-Risk defaults: **block new only**. Enable Flatten* for prop-style hard stop / bank-the-day.
+Risk defaults: **block new only**. Enable Flatten**Spec version:** v1.4 (aligned with code: VP2, RiskAmount, MaxSlDistance & MaxLvnWidth filters)  
 
 ### Stop Loss
 
 | Parameter (UI) | Property | Default | Meaning |
 | --- | --- | --- | --- |
-| ATR Period | AtrPeriod | 14 | ATR for SL distances |
-| **LVN buffer (×ATR)** | SlAtrMult | 0.5 | Đệm **ngoài mép LVN**: Long SL = LVN.Low − ATR×k; Short = LVN.High + ATR×k |
-| **Min SL distance (×ATR)** | MinSlAtrMult | 0.8 | **Sàn** entry→SL: không cho SL sát hơn ATR×k so với entry. Final SL = wider of (structure+buffer) vs floor |
+| **SL TimeFrame** | SlTimeFrame | Hour (H1) | Timeframe để lấy ATR buffer cho SL |
+| ATR Period | AtrPeriod | 14 | ATR Period cho SL buffer |
+| **LVN buffer (×ATR)** | SlAtrMult | 0.5 | Đệm **ngoài mép LVN**: Long SL = LVN.Low − ATR(HTF)×k; Short = LVN.High + ATR(HTF)×k |
 
 ### Take Profit
 
@@ -234,19 +236,23 @@ Risk defaults: **block new only**. Enable Flatten* for prop-style hard stop / ba
 
 Why not raw $ or “pips”? SL width changes every trade; **R scales with SL**. On XAU, cTrader pip often = $0.01 so “20 pips” ≠ 20 gold points.
 
-### Volume Profile
+### Volume Profile (V2 Engine)
 
-| Parameter | Default |
-| --- | --- |
-| Lookback Days | 4 |
-| Bin Size | 0.5 |
-| Value Area % | 70 |
-| LVN Threshold | 0.65 |
-| HVN Threshold | 1.25 |
-| Weight Decay | 0.8 |
-| Min LVN Strength | 0.20 |
-| Max LVN Width ($) | 25 |
-| Visualize Profile | true |
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| VP Mode | Daily | Daily composite vs RollingHours intraday window |
+| VP Lookback (Hours) | 8.0 | Lookback window when VP Mode = RollingHours |
+| Lookback Days | 4 | Trading days in composite |
+| Bin Size | 0.5 | Price bin width ($) on XAU |
+| Value Area % | 70 | VA expand from POC |
+| LVN Threshold | 0.65 | Bin ≤ mean×threshold → low-vol candidate |
+| HVN Threshold | 1.25 | Bin ≥ mean×threshold → high-vol region |
+| Weight Decay | 0.8 | Day weight = decay^age (newest = 1) |
+| Min LVN Strength | 0.20 | Min strength to trade |
+| Max LVN Width ($) | 25 | Split/reject oversized voids |
+| Use M1 Source Bars | true | Compute bin delta using M1 intraday bars |
+| Use Gaussian Smooth | true | 1D Gaussian kernel smoothing for noise reduction |
+| Visualize Profile | true | Render VP on chart |
 
 ### Signal Filters
 

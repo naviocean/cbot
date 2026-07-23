@@ -23,6 +23,9 @@ namespace cAlgo.Indicators
         [Parameter("Enable Order Blocks", Group = "1. Logic Engines", DefaultValue = true)]
         public bool EnableOb { get; set; }
 
+        [Parameter("Enable NWOG / NDOG", Group = "1. Logic Engines", DefaultValue = true)]
+        public bool EnableOpenGaps { get; set; }
+
         // ==========================================
         // PARAMETERS: ENGINE THRESHOLDS & BOUNDS
         // ==========================================
@@ -53,6 +56,9 @@ namespace cAlgo.Indicators
         [Parameter("Show OB Visuals", Group = "3. Visual Render", DefaultValue = true)]
         public bool ShowObVisuals { get; set; }
 
+        [Parameter("Show Open Gap Lines", Group = "3. Visual Render", DefaultValue = true)]
+        public bool ShowOpenGapVisuals { get; set; }
+
         protected override void Initialize()
         {
             _smcMatrix = new SmcConfluenceMatrix();
@@ -66,39 +72,42 @@ namespace cAlgo.Indicators
 
         public override void Calculate(int index)
         {
-            // Limit calculation to the last MaxBarsToScan bars
-            int startBarIndex = Math.Max(0, Bars.Count - MaxBarsToScan);
-            if (index < startBarIndex) return;
-
-            // 1. Process bar sequentially within MaxBarsToScan range
-            _smcMatrix.OnBar(Bars, index, Symbol.PipSize);
-
-            // 2. Render ONLY Active visual objects on the last bar
             if (IsLastBar)
             {
-                if (EnableFvg)
+                int startBar = Math.Max(0, Bars.Count - MaxBarsToScan);
+                _smcMatrix.Reset();
+
+                for (int i = startBar; i < Bars.Count; i++)
                 {
-                    // Clean up mitigated or obsolete FVGs
-                    foreach (var fvg in _smcMatrix.FvgEngine.AllFvgs)
-                    {
-                        _renderer.DrawFvg(fvg, ShowFvgVisuals, autoClean: true);
-                    }
+                    _smcMatrix.OnBar(Bars, i, Symbol.PipSize);
                 }
 
-                if (EnableStructure)
+                if (ShowFvgVisuals && EnableFvg)
+                {
+                    foreach (var fvg in _smcMatrix.FvgEngine.AllFvgs)
+                        _renderer.DrawFvg(fvg, true, autoClean: true);
+                }
+
+                if (ShowStructureVisuals && EnableStructure)
                 {
                     foreach (var evt in _smcMatrix.StructureEngine.Events)
-                        _renderer.DrawStructure(evt, ShowStructureVisuals);
+                        _renderer.DrawStructure(evt, true);
                 }
 
-                if (EnableOb)
+                if (ShowObVisuals && EnableOb)
                 {
                     foreach (var ob in _smcMatrix.ObEngine.ActiveOrderBlocks)
-                        _renderer.DrawOrderBlock(ob, ShowObVisuals, autoClean: true);
+                        _renderer.DrawOrderBlock(ob, true, autoClean: true);
+                }
+
+                if (ShowOpenGapVisuals && EnableOpenGaps)
+                {
+                    foreach (var gap in _smcMatrix.NwogEngine.ActiveGaps)
+                        _renderer.DrawOpenGap(gap, true);
                 }
 
                 string zoneText = _smcMatrix.RangeEngine.GetZone(Symbol.Ask).ToString();
-                Chart.DrawStaticText("SMC_INFO", $"[SMC/ICT Engine] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count()} | Mode: {MitigationMode}", VerticalAlignment.Top, HorizontalAlignment.Right, Color.Gold);
+                Chart.DrawStaticText("SMC_PANEL", $"[SMC Indicator] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count()} | NWOG Gaps: {_smcMatrix.NwogEngine.ActiveGaps.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Cyan);
             }
         }
     }

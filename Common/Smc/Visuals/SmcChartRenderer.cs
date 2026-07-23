@@ -18,11 +18,13 @@ namespace RedWave.Common.Smc
         public Color BullishObColor { get; set; } = Color.FromArgb(70, 30, 144, 255);   // Semi-transparent Royal Blue
         public Color BearishObColor { get; set; } = Color.FromArgb(70, 153, 50, 204);  // Semi-transparent Dark Purple
 
-        // BOS Colors
+        // Open Gap Colors (NWOG / NDOG)
+        public Color NwogColor { get; set; } = Color.Aqua;
+        public Color NdogColor { get; set; } = Color.SpringGreen;
+
+        // Structure Lines Colors
         public Color BullishBosColor { get; set; } = Color.LimeGreen;
         public Color BearishBosColor { get; set; } = Color.Crimson;
-
-        // ChoCH Colors
         public Color BullishChochColor { get; set; } = Color.Gold;
         public Color BearishChochColor { get; set; } = Color.DarkOrange;
 
@@ -62,6 +64,35 @@ namespace RedWave.Common.Smc
 
             string label = fvg.Direction == TradeType.Buy ? $"FVG (Buy) #{fvg.Id}" : $"FVG (Sell) #{fvg.Id}";
             _chart.DrawText(key + "_TXT", label, fvg.CreatedBarIndex, fvg.TopPrice, textCol);
+        }
+
+        public void DrawOpenGap(OpenGapLevel gap, bool showVisual)
+        {
+            if (_chart == null) return;
+            string key = $"SMC_GAP_{gap.Id}";
+
+            if (!showVisual || gap.IsFilled)
+            {
+                _chart.RemoveObject(key);
+                _chart.RemoveObject(key + "_TXT");
+                return;
+            }
+
+            Color color = gap.Type == OpenGapType.NWOG ? NwogColor : NdogColor;
+            string label = $"{gap.Type} #{gap.Id}";
+
+            _chart.DrawTrendLine(
+                key,
+                gap.BarIndex,
+                gap.MidPrice,
+                _chart.LastVisibleBarIndex + 5,
+                gap.MidPrice,
+                color,
+                2,
+                LineStyle.LinesDots
+            );
+
+            _chart.DrawText(key + "_TXT", label, gap.BarIndex, gap.MidPrice, color);
         }
 
         public void DrawStructure(StructureEvent evt, bool showVisual)

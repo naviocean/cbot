@@ -23,8 +23,19 @@ namespace cAlgo.Robots
     {
         /// <summary>Volume from Risk % of balance and SL distance (default).</summary>
         RiskPercent = 0,
+        /// <summary>Volume from fixed cash risk amount ($) and SL distance.</summary>
+        RiskAmount = 1,
         /// <summary>Fixed lots (broker lot → volume units via LotSize).</summary>
-        FixedLots = 1
+        FixedLots = 2
+    }
+
+    /// <summary>Volume Profile lookback calculation mode.</summary>
+    public enum VpLookbackMode
+    {
+        /// <summary>Composite over recent N daily sessions (default).</summary>
+        Daily = 0,
+        /// <summary>Rolling intraday window over last N hours.</summary>
+        RollingHours = 1
     }
 
     [Robot(TimeZone = TimeZones.UTC, AccessRights = AccessRights.None)]
@@ -43,6 +54,10 @@ namespace cAlgo.Robots
         /// <summary>Used when Lot Size Mode = RiskPercent.</summary>
         [Parameter("Risk %", Group = "Trade & Risk", DefaultValue = 0.75, MinValue = 0.1, MaxValue = 5.0)]
         public double RiskPercent { get; set; }
+
+        /// <summary>Used when Lot Size Mode = RiskAmount ($ cash risk per trade).</summary>
+        [Parameter("Risk Amount ($)", Group = "Trade & Risk", DefaultValue = 50.0, MinValue = 1.0)]
+        public double RiskAmount { get; set; }
 
         /// <summary>Used when Lot Size Mode = FixedLots (e.g. 0.01 standard lots).</summary>
         [Parameter("Fixed Lots", Group = "Trade & Risk", DefaultValue = 0.01, MinValue = 0.01)]
@@ -91,6 +106,9 @@ namespace cAlgo.Robots
         // SL = structure (LVN ± buffer) but never tighter than min distance from entry.
         //   Buffer beyond LVN  = ATR × "LVN buffer (×ATR)"
         //   Min SL from entry  = ATR × "Min SL distance (×ATR)"
+        [Parameter("SL TimeFrame", Group = "Stop Loss", DefaultValue = "Hour")]
+        public TimeFrame SlTimeFrame { get; set; }
+
         [Parameter("ATR Period", Group = "Stop Loss", DefaultValue = 14, MinValue = 5)]
         public int AtrPeriod { get; set; }
 
@@ -100,14 +118,6 @@ namespace cAlgo.Robots
         /// </summary>
         [Parameter("LVN buffer (×ATR)", Group = "Stop Loss", DefaultValue = 0.5, MinValue = 0.0)]
         public double SlAtrMult { get; set; }
-
-        /// <summary>
-        /// Floor: minimum entry→SL distance (in ATR units), so SL cannot sit too tight when LVN is near price.
-        /// Long: SL ≤ entry − ATR×this; Short: SL ≥ entry + ATR×this.
-        /// Final SL uses the wider of (LVN+buffer) vs this floor.
-        /// </summary>
-        [Parameter("Min SL distance (×ATR)", Group = "Stop Loss", DefaultValue = 0.8, MinValue = 0.1)]
-        public double MinSlAtrMult { get; set; }
 
         // ─── Take Profit (single, full size) ─────────────────
         [Parameter("TP Mode", Group = "Take Profit", DefaultValue = TpMode.RiskReward)]
@@ -148,11 +158,17 @@ namespace cAlgo.Robots
         [Parameter("Trail Step (R)", Group = "Trailing", DefaultValue = 0.5, MinValue = 0.1, MaxValue = 5.0)]
         public double TrailStepR { get; set; }
 
-        // ─── Volume Profile ─────────────────────────────────
+        // ─── Volume Profile V2 ──────────────────────────────
+        [Parameter("VP Mode", Group = "Volume Profile", DefaultValue = VpLookbackMode.Daily)]
+        public VpLookbackMode ProfileMode { get; set; }
+
+        [Parameter("VP Lookback (Hours)", Group = "Volume Profile", DefaultValue = 8.0, MinValue = 1.0, MaxValue = 168.0)]
+        public double VpLookbackHours { get; set; }
+
         [Parameter("Lookback Days", Group = "Volume Profile", DefaultValue = 4, MinValue = 1, MaxValue = 10)]
         public int ProfileLookbackDays { get; set; }
 
-        [Parameter("Bin Size", Group = "Volume Profile", DefaultValue = 0.5, MinValue = 0.1)]
+        [Parameter("Bin Size", Group = "Volume Profile", DefaultValue = 0.5, MinValue = 0.01)]
         public double BinSize { get; set; }
 
         [Parameter("Value Area %", Group = "Volume Profile", DefaultValue = 70.0, MinValue = 50.0, MaxValue = 90.0)]
@@ -172,6 +188,12 @@ namespace cAlgo.Robots
 
         [Parameter("Max LVN Width ($)", Group = "Volume Profile", DefaultValue = 25.0, MinValue = 1.0)]
         public double MaxLvnWidth { get; set; }
+
+        [Parameter("Use M1 Source Bars", Group = "Volume Profile", DefaultValue = true)]
+        public bool UseM1SourceBars { get; set; }
+
+        [Parameter("Use Gaussian Smooth", Group = "Volume Profile", DefaultValue = true)]
+        public bool UseGaussianSmooth { get; set; }
 
         [Parameter("Visualize Profile", Group = "Volume Profile", DefaultValue = true)]
         public bool VisualizeProfile { get; set; }
@@ -233,7 +255,7 @@ namespace cAlgo.Robots
 
         // ─── Internals ──────────────────────────────────────
         private CLogger _logger;
-        private CVolumeProfile _volumeProfile;
+        private CVolumeProfileV2 _volumeProfile;
         private CTickDeltaEngine _deltaEngine;
         private CRiskManager _riskManager;
         private CSessionFilter _sessionFilter;
@@ -242,7 +264,10 @@ namespace cAlgo.Robots
         private CTrailingManager _trailingManager;
         private SignalEngine _signalEngine;
         private AverageTrueRange _atr;
+        private AverageTrueRange _slAtr;
         private Bars _htfBars;
+        private Bars _slBars;
+        private Bars _m1Bars;
 
         private ProfileData _profile;
         private int _tradesToday;
@@ -256,19 +281,21 @@ namespace cAlgo.Robots
             _logger = new CLogger();
             _logger.Init("VacuumHunter", DebugLogging ? LogLevel.Debug : LogLevel.Info, Print);
 
-            _volumeProfile = new CVolumeProfile();
-            _volumeProfile.Init(Bars, Chart, 100, VisualizeProfile, _logger);
+            _m1Bars = UseM1SourceBars ? MarketData.GetBars(TimeFrame.Minute, SymbolName) : null;
+            _volumeProfile = new CVolumeProfileV2();
+            _volumeProfile.Init(Bars, _m1Bars, Chart, 100, VisualizeProfile, _logger);
             _volumeProfile.ConfigureComposite(
                 BinSize,
                 ProfileLookbackDays,
-                ValueAreaPercent / 100.0,
+                ValueAreaPercent > 1.0 ? ValueAreaPercent / 100.0 : ValueAreaPercent,
                 LvnThreshold,
                 HvnThreshold,
                 WeightDecay,
                 1.25,
                 1.25,
                 MaxLvnWidth,
-                true);
+                true,
+                UseGaussianSmooth);
 
             _deltaEngine = new CTickDeltaEngine();
             _deltaEngine.Init(50000, _logger);
@@ -300,6 +327,8 @@ namespace cAlgo.Robots
 
             _signalEngine = new SignalEngine();
             _atr = Indicators.AverageTrueRange(AtrPeriod, MovingAverageType.Simple);
+            _slBars = SlTimeFrame != TimeFrame ? MarketData.GetBars(SlTimeFrame, SymbolName) : Bars;
+            _slAtr = Indicators.AverageTrueRange(_slBars, AtrPeriod, MovingAverageType.Simple);
             _htfBars = MarketData.GetBars(HtfTimeframe, SymbolName);
 
             _tradesToday = 0;
@@ -310,9 +339,18 @@ namespace cAlgo.Robots
 
             Positions.Closed += OnPositionClosed;
 
-            _profile = _volumeProfile.BuildComposite(Server.TimeInUtc);
+            _profile = ProfileMode == VpLookbackMode.RollingHours
+                ? _volumeProfile.BuildRollingHours(Server.TimeInUtc, VpLookbackHours)
+                : _volumeProfile.BuildComposite(Server.TimeInUtc);
+            string sizeDesc = SizeMode switch
+            {
+                LotSizeMode.RiskAmount => $"RiskAmount=${RiskAmount:F2}",
+                LotSizeMode.FixedLots => $"FixedLots={FixedLots}",
+                _ => $"RiskPercent={RiskPercent}%"
+            };
+
             _logger.Info(
-                $"Started {SymbolName} TF={TimeFrame} risk={RiskPercent}% TP={TakeProfitMode} " +
+                $"Started {SymbolName} TF={TimeFrame} sizeMode={SizeMode} ({sizeDesc}) TP={TakeProfitMode} " +
                 $"RR={RrMultiple} BE={UseBreakEven} Trail={UseTrailing} " +
                 $"sessions={_sessionFilter.DescribeEnabled()} " +
                 $"HVN={_profile?.Hvns?.Count ?? 0} LVN={_profile?.Lvns?.Count ?? 0} debug={DebugLogging}");
@@ -356,7 +394,9 @@ namespace cAlgo.Robots
         protected override void OnBar()
         {
             // Risk flatten/gates run only in OnTick → _riskManager.OnTick() (must not wait for bar close).
-            _profile = _volumeProfile.BuildComposite(Server.TimeInUtc);
+            _profile = ProfileMode == VpLookbackMode.RollingHours
+                ? _volumeProfile.BuildRollingHours(Server.TimeInUtc, VpLookbackHours)
+                : _volumeProfile.BuildComposite(Server.TimeInUtc);
             ResetDailyCounters();
 
             if (Bars.Count < 5 || _htfBars == null || _htfBars.Count < 3)
@@ -425,9 +465,8 @@ namespace cAlgo.Robots
 
         private void ExecuteSignal(SignalResult signal)
         {
-            double atr = _atr != null && _atr.Result.Count > 1 ? _atr.Result.Last(1) : Symbol.PipSize * 50;
-            double atrBuf = atr * Math.Max(0, SlAtrMult);
-            double minSlDist = atr * Math.Max(0.1, MinSlAtrMult);
+            double slAtrVal = _slAtr != null && _slAtr.Result.Count > 1 ? _slAtr.Result.Last(1) : Symbol.PipSize * 50;
+            double atrBuf = slAtrVal * Math.Max(0, SlAtrMult);
 
             TradeType tradeType;
             double entry;
@@ -437,7 +476,7 @@ namespace cAlgo.Robots
             {
                 tradeType = TradeType.Buy;
                 entry = Symbol.Ask;
-                sl = Math.Min(signal.Lvn.Low - atrBuf, entry - minSlDist);
+                sl = signal.Lvn.Low - atrBuf;
                 if (sl >= entry)
                 {
                     _logger.Warn($"Execute aborted: invalid long SL={sl} entry={entry}");
@@ -448,7 +487,7 @@ namespace cAlgo.Robots
             {
                 tradeType = TradeType.Sell;
                 entry = Symbol.Bid;
-                sl = Math.Max(signal.Lvn.High + atrBuf, entry + minSlDist);
+                sl = signal.Lvn.High + atrBuf;
                 if (sl <= entry)
                 {
                     _logger.Warn($"Execute aborted: invalid short SL={sl} entry={entry}");
@@ -456,13 +495,15 @@ namespace cAlgo.Robots
                 }
             }
 
-            sl = PriceUtils.NormalizePrice(sl, Symbol);
-            double slDist = Math.Abs(entry - sl);
-            if (slDist < minSlDist * 0.5)
+            double lvnWidth = signal.Lvn.High - signal.Lvn.Low;
+            if (MaxLvnWidth > 0 && lvnWidth > MaxLvnWidth)
             {
-                _logger.Warn($"Execute aborted: SL too tight slDist={slDist:F2}");
+                _logger.Warn($"Execute aborted: LVN width ${lvnWidth:F2} exceeds MaxLvnWidth ${MaxLvnWidth:F2}");
                 return;
             }
+
+            sl = PriceUtils.NormalizePrice(sl, Symbol);
+            double slDist = Math.Abs(entry - sl);
 
             if (!TryComputeTakeProfit(signal, tradeType, entry, slDist, out double tp, out string tpNote))
             {
@@ -497,23 +538,42 @@ namespace cAlgo.Robots
             double tpDist = Math.Abs(tp - entry);
             double rr = slDist > 0 ? tpDist / slDist : 0;
 
-            var result = ExecuteMarketOrder(tradeType, SymbolName, volume, BotLabel, sl, tp, null, false);
+            if (DebugLogging)
+            {
+                _logger.Debug(
+                    $"[RISK DIAGNOSTIC] Symbol={SymbolName} PipSize={Symbol.PipSize} PipValue={Symbol.PipValue} " +
+                    $"TickSize={Symbol.TickSize} TickValue={Symbol.TickValue} LotSize={Symbol.LotSize} " +
+                    $"MinVol={Symbol.VolumeInUnitsMin} StepVol={Symbol.VolumeInUnitsStep}");
+            }
+
+            double slPips = PriceUtils.PriceToPips(slDist, Symbol);
+            double tpPips = PriceUtils.PriceToPips(tpDist, Symbol);
+
+            var result = ExecuteMarketOrder(tradeType, SymbolName, volume, BotLabel, slPips, tpPips);
             if (!result.IsSuccessful || result.Position == null)
             {
                 _logger.Error($"Order failed: {result.Error}");
                 return;
             }
 
+            // Refine SL and TP to exact absolute structure prices
+            ModifyPosition(result.Position, sl, tp, ProtectionType.Absolute);
+
             // BE/Trail thresholds scale with this order's SL (1R = slDist)
             ConfigureExitsForTrade(slDist);
 
             _tradesToday++;
+            var pos = result.Position;
+            double actualSlDist = pos.StopLoss.HasValue ? Math.Abs(pos.EntryPrice - pos.StopLoss.Value) : slDist;
+            double actualEstRisk = PriceUtils.PriceToAmount(actualSlDist, pos.VolumeInUnits, Symbol);
+
             _logger.Info(
-                $"OPEN {tradeType} #{result.Position.Id} vol={volume} SL={sl:F1} TP={tp:F1} " +
-                $"slDist={slDist:F1} tpDist={tpDist:F1} RR={rr:F2} ({tpNote}) size={sizeNote} " +
+                $"OPEN {tradeType} #{pos.Id} vol={volume} units ({volume / Symbol.LotSize:F2} lots) " +
+                $"Entry={pos.EntryPrice:F2} SL={pos.StopLoss:F2} TP={pos.TakeProfit:F2} " +
+                $"slDist={actualSlDist:F2} tpDist={tpDist:F2} RR={rr:F2} ({tpNote}) size={sizeNote} " +
                 $"BE={(UseBreakEven ? $"{BeStartR:F2}R" : "off")} " +
                 $"Trail={(UseTrailing ? $"{TrailStartR:F2}R/{TrailStepR:F2}R" : "off")} " +
-                $"risk=${expectedRisk:F0} ({riskPctActual:F2}%) dailyPnl=${dailyPnl:F0} dayRoom=${(dailyRoom > 1e12 ? -1 : dailyRoom):F0}");
+                $"targetRisk=${expectedRisk:F2} actualEstLoss=${actualEstRisk:F2} ({riskPctActual:F2}%) dailyPnl=${dailyPnl:F0}");
         }
 
         /// <summary>
@@ -563,8 +623,11 @@ namespace cAlgo.Robots
                 return true;
             }
 
-            // RiskPercent (default)
-            double riskMoney = Account.Balance * (RiskPercent / 100.0);
+            // RiskAmount or RiskPercent (default)
+            double riskMoney = SizeMode == LotSizeMode.RiskAmount
+                ? RiskAmount
+                : Account.Balance * (RiskPercent / 100.0);
+
             if (_riskManager.IsDailyLossLimitEnabled && riskMoney > dailyRoom)
             {
                 _logger.Info($"Risk capped by daily room: ${riskMoney:F0} → ${dailyRoom:F0} (dailyPnl=${dailyPnl:F0})");
@@ -574,11 +637,15 @@ namespace cAlgo.Robots
             volume = _riskManager.CalculateVolumeFromRiskMoney(riskMoney, slDist, out expectedRisk);
             if (volume <= 0)
             {
-                sizeNote = $"RiskPercent={RiskPercent}% money=${riskMoney:F0}";
+                sizeNote = SizeMode == LotSizeMode.RiskAmount
+                    ? $"RiskAmount=${RiskAmount}"
+                    : $"RiskPercent={RiskPercent}% money=${riskMoney:F0}";
                 return false;
             }
 
-            sizeNote = $"RiskPercent={RiskPercent}%";
+            sizeNote = SizeMode == LotSizeMode.RiskAmount
+                ? $"RiskAmount=${RiskAmount}"
+                : $"RiskPercent={RiskPercent}%";
             return true;
         }
 
@@ -641,12 +708,15 @@ namespace cAlgo.Robots
 
         private void OnPositionClosed(PositionClosedEventArgs args)
         {
-            if (args?.Position == null) return;
-            if (args.Position.Label != BotLabel || args.Position.SymbolName != SymbolName) return;
+            var pos = args?.Position;
+            if (pos == null || pos.Label != BotLabel || pos.SymbolName != SymbolName) return;
 
+            double closedSlDist = pos.StopLoss.HasValue ? Math.Abs(pos.EntryPrice - pos.StopLoss.Value) : 0;
             _logger.Info(
-                $"CLOSE #{args.Position.Id} net={args.Position.NetProfit:F2} {args.Reason} " +
-                $"eqDailyPnl=${_riskManager.GetDailyPnlMoney(Account.Equity):F0}");
+                $"CLOSE #{pos.Id} Side={pos.TradeType} Vol={pos.VolumeInUnits} units ({pos.VolumeInUnits / Symbol.LotSize:F2} lots) " +
+                $"Entry={pos.EntryPrice:F2} SL={pos.StopLoss:F2} TP={pos.TakeProfit:F2} slDist={closedSlDist:F2} " +
+                $"GrossPnL=${pos.GrossProfit:F2} NetPnL=${pos.NetProfit:F2} Swap=${pos.Swap:F2} Comm=${pos.Commissions:F2} " +
+                $"Reason={args.Reason} eqDailyPnl=${_riskManager.GetDailyPnlMoney(Account.Equity):F0}");
         }
 
         private void ResetDailyCounters()

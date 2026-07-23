@@ -3,7 +3,7 @@ using cAlgo.API;
 namespace RedWave.Common.Smc
 {
     /// <summary>
-    /// Facade class aggregating all 5 core SMC/ICT engines into a unified signal matrix.
+    /// Facade class aggregating all core SMC/ICT engines into a unified signal matrix.
     /// </summary>
     public class SmcConfluenceMatrix
     {
@@ -12,6 +12,8 @@ namespace RedWave.Common.Smc
         public LiquidityEngine LiquidityEngine { get; }
         public OrderBlockEngine ObEngine { get; }
         public DealingRangeEngine RangeEngine { get; }
+        public NwogEngine NwogEngine { get; }
+        public IctUnicornDetector UnicornDetector { get; }
 
         public SmcConfluenceMatrix()
         {
@@ -20,6 +22,8 @@ namespace RedWave.Common.Smc
             LiquidityEngine = new LiquidityEngine();
             ObEngine = new OrderBlockEngine();
             RangeEngine = new DealingRangeEngine();
+            NwogEngine = new NwogEngine();
+            UnicornDetector = new IctUnicornDetector();
         }
 
         /// <summary>
@@ -33,6 +37,8 @@ namespace RedWave.Common.Smc
             LiquidityEngine.Update(bars, barIndex, pipSize);
             ObEngine.Update(bars, FvgEngine.ActiveFvgs, barIndex);
             RangeEngine.Update(StructureEngine.CurrentSwingHigh, StructureEngine.CurrentSwingLow);
+            NwogEngine.Update(bars, barIndex, pipSize);
+            UnicornDetector.Update(ObEngine.ActiveOrderBlocks, FvgEngine.ActiveFvgs);
         }
 
         public bool IsValidBuySetup(double currentPrice, out FairValueGap targetFvg, out OrderBlock targetOb)
@@ -75,6 +81,8 @@ namespace RedWave.Common.Smc
             FvgEngine.Reset();
             LiquidityEngine.Reset();
             ObEngine.Reset();
+            NwogEngine.Reset();
+            UnicornDetector.Reset();
         }
     }
 }

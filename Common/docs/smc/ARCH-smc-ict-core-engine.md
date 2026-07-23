@@ -2,9 +2,9 @@
 
 | Attribute | Value |
 | :--- | :--- |
-| **Status** | Approved |
+| **Status** | Approved (v1.0 Deployed, v2.0 Architecture Planned) |
 | **Architect** | `@cbot-expert` |
-| **Version** | v1.0 |
+| **Version** | v2.0 Architecture |
 | **Target Framework** | .NET Standard 2.0 / C# cTrader API |
 
 ---
@@ -25,6 +25,8 @@ graph TD
         LE[LiquidityEngine]
         OBE[OrderBlockEngine]
         DRE[DealingRangeEngine]
+        NWE[NwogEngine - v2.0]
+        UNI[IctUnicornDetector - v2.0]
     end
 
     subgraph Facade & Signal Layer
@@ -36,10 +38,10 @@ graph TD
         Robot[cBot / Strategy Execution]
     end
 
-    Bars --> MSE & FE & LE & OBE
+    Bars --> MSE & FE & LE & OBE & NWE & UNI
     MSE --> DRE
-    MSE & FE & LE & OBE & DRE --> SCM
-    FE & MSE & OBE & LE --> SCR
+    MSE & FE & LE & OBE & DRE & NWE & UNI --> SCM
+    FE & MSE & OBE & LE & NWE & UNI --> SCR
     SCM -->|Buy / Sell Signal| Robot
     SCR -->|Render Drawings| ChartUI[cTrader Chart Canvas]
 ```
@@ -48,64 +50,71 @@ graph TD
 
 ## 2. State Machine Diagrams
 
-### 2.1. FVG Lifecycle State Machine
+### 2.1. FVG Lifecycle State Machine (Including Inversion FVG)
 ```mermaid
 stateDiagram-v2
     [*] --> Active: Quét 3-Candle Pattern (Low[N] > High[N-2])
     Active --> PartiallyFilled: Giá chạm 50% CE (Consequent Encroachment)
-    Active --> Mitigated: Giá lấp đầy 100% khoảng trống FVG
-    PartiallyFilled --> Mitigated: Giá tiếp tục lấp đầy 100%
-    Active --> Invalidated: Giá đóng nến vượt qua cạnh đáy (Bullish FVG)
+    Active --> Mitigated: Giá lấp đầy theo MitigationMode (TouchEdge / HalfFill / FullFill)
+    Active --> InversionFVG: Giá đóng nến đâm thủng dứt khoát qua FVG
+    InversionFVG --> Mitigated: Giá quay lại retrace test iFVG
     Mitigated --> [*]: Xóa đối tượng Visual khỏi Chart
-    Invalidated --> [*]: Xóa đối tượng Visual khỏi Chart
 ```
 
 ---
 
-## 3. Data Flow & Processing Pipeline
+## 3. Advanced Engine Components (v2.0 Specs)
 
-1. **`OnBar` Event Trigger:** Mỗi khi đóng nến mới, `SmcConfluenceMatrix` điều phối luồng xử lý:
-   - `MarketStructureEngine.Update(bars)` $\rightarrow$ Cập nhật Pivot Points, kiểm tra BOS / ChoCH / MSS.
-   - `FvgEngine.Update(bars)` $\rightarrow$ Phát hiện FVG mới và cập nhật trạng thái của các FVG cũ (`Active` $\rightarrow$ `Mitigated`).
-   - `LiquidityEngine.Update(bars)` $\rightarrow$ Quét BSL/SSL và bắt sự kiện `SweepEvent`.
-   - `OrderBlockEngine.Update(bars, activeFvgs)` $\rightarrow$ Lọc Order Block có liên kết FVG hợp lệ.
-   - `DealingRangeEngine.Update(swingHigh, swingLow)` $\rightarrow$ Cập nhật mốc 50% Fibonacci Equilibrium.
+### 3.1. `NwogEngine.cs`
+* **Data Structure:**
+  ```csharp
+  public class OpenGapLevel
+  {
+      public DateTime OpenTime { get; set; }
+      public double GapTopPrice { get; set; }
+      public double GapBottomPrice { get; set; }
+      public bool IsFilled { get; set; }
+  }
+  ```
 
-2. **Visual Render Pass:**
-   - Nếu `ShowFvgVisuals == true` $\rightarrow$ `SmcChartRenderer.DrawFvg(...)`.
-   - Nếu `AutoCleanVisuals == true` $\rightarrow$ Tự động xóa các đối tượng FVG/OB đã `Mitigated`.
+### 3.2. `IctUnicornDetector.cs`
+* **Logic:**
+  ```csharp
+  public bool IsUnicornSetup(OrderBlock ob, FairValueGap fvg)
+  {
+      if (ob.Type != ObType.BreakerBlock) return false;
+      // Kiêm tra Breaker Block và FVG có cùng chiều và trùng vùng giá
+      bool isOverlapping = Math.Max(ob.BottomPrice, fvg.BottomPrice) <= Math.Min(ob.TopPrice, fvg.TopPrice);
+      return ob.Direction == fvg.Direction && isOverlapping;
+  }
+  ```
 
 ---
 
-## 4. Component Interface Definitions
+## 4. Visual Rendering Pipeline & Color Matrix
 
 ```csharp
-namespace RedWave.Common.Smc
-{
-    public interface ISmcEngine
-    {
-        void Update(Bars bars);
-        void Reset();
-    }
+// Color Definitions
+BullishFvgColor = Color.FromArgb(60, 0, 238, 255);   // Cyan
+BearishFvgColor = Color.FromArgb(60, 255, 20, 147);  // HotPink
 
-    public interface ISmcRenderer
-    {
-        void DrawFvg(FairValueGap fvg, bool showVisual);
-        void DrawStructure(StructureEvent evt, bool showVisual);
-        void DrawOrderBlock(OrderBlock ob, bool showVisual);
-        void ClearAll();
-    }
-}
+BullishObColor = Color.FromArgb(70, 30, 144, 255);   // RoyalBlue
+BearishObColor = Color.FromArgb(70, 153, 50, 204);  // DarkPurple
+
+BullishBosColor = Color.LimeGreen;
+BearishBosColor = Color.Crimson;
+
+BullishChochColor = Color.Gold;
+BearishChochColor = Color.DarkOrange;
+
+BullishMssColor = Color.Yellow;
+BearishMssColor = Color.Magenta;
 ```
 
 ---
 
 ## 5. Performance & Memory Guidelines
 
-1. **Memory Allocation:**
-   - Sử dụng `List<FairValueGap>` với dung lượng cố định (Ring Buffer hoặc `TakeLast(50)`) để tránh phình to bộ nhớ khi chạy backtest thời gian dài (vài triệu nến).
-2. **Chart Object Keys:**
-   - Định danh duy nhất cho từng đối tượng hình vẽ trên cTrader:
-     - `SMC_FVG_{Id}`
-     - `SMC_BOS_{TimeTicks}`
-     - `SMC_OB_{Id}`
+1. **Max Bars Historical Boundary:** Sử dụng `MaxBarsToScan` (mặc định `500` bars) để cắt ngắn cửa sổ tính toán lịch sử.
+2. **Ring Buffer Cleanup:** Tự động xóa các FVG/OB đã `Mitigated` khỏi `List<T>` để duy trì $O(1)$ performance.
+3. **Unique Keys:** Đối tượng vẽ cTrader được đánh key chuẩn UUID (`SMC_FVG_{Id}`, `SMC_OB_{Id}`, `SMC_STRUCT_{Time.Ticks}`).

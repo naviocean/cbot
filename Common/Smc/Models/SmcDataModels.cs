@@ -29,7 +29,7 @@ namespace RedWave.Common.Smc
     }
 
     /// <summary>
-    /// Represents a Fair Value Gap (3-candle imbalance).
+    /// Represents a Fair Value Gap (3-candle imbalance) or Inversion FVG (iFVG).
     /// </summary>
     public class FairValueGap
     {
@@ -42,6 +42,22 @@ namespace RedWave.Common.Smc
         public int CreatedBarIndex { get; set; }
         public DateTime CreatedTime { get; set; }
         public double GapPips { get; set; }
+        public bool IsInversion { get; set; } // True if converted to Inversion FVG
+    }
+
+    /// <summary>
+    /// Represents an ICT Open Gap (New Week Open Gap - NWOG or New Day Open Gap - NDOG).
+    /// </summary>
+    public class OpenGapLevel
+    {
+        public int Id { get; set; }
+        public OpenGapType Type { get; set; }
+        public double TopPrice { get; set; }
+        public double BottomPrice { get; set; }
+        public double MidPrice => (TopPrice + BottomPrice) / 2.0; // 50% CE
+        public DateTime OpenTime { get; set; }
+        public int BarIndex { get; set; }
+        public bool IsFilled { get; set; }
     }
 
     /// <summary>
@@ -58,6 +74,20 @@ namespace RedWave.Common.Smc
         public DateTime CreatedTime { get; set; }
         public int AssociatedFvgId { get; set; } // FVG ID associated with displacement
         public bool IsMitigated { get; set; }
+    }
+
+    /// <summary>
+    /// Represents an ICT Unicorn Setup (Overlapping Breaker Block + FVG).
+    /// </summary>
+    public class UnicornSetup
+    {
+        public int Id { get; set; }
+        public TradeType Direction { get; set; }
+        public OrderBlock BreakerBlock { get; set; }
+        public FairValueGap Fvg { get; set; }
+        public double OverlapTopPrice { get; set; }
+        public double OverlapBottomPrice { get; set; }
+        public DateTime DetectedTime { get; set; }
     }
 
     /// <summary>

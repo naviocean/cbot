@@ -27,7 +27,8 @@ namespace RedWave.Common.Smc
         Active,          // Unfilled gap
         PartiallyFilled, // Touched 50% CE
         Mitigated,       // Filled gap according to MitigationMode
-        Invalidated      // Broken beyond origin
+        Invalidated,     // Broken beyond origin
+        Inversion        // Inverted role (Inversion FVG iFVG)
     }
 
     /// <summary>
@@ -35,9 +36,18 @@ namespace RedWave.Common.Smc
     /// </summary>
     public enum FvgMitigationMode
     {
-        TouchEdge,   // Price touches entry edge of FVG (TopPrice for Buy, BottomPrice for Sell)
+        TouchEdge,   // Price touches entry edge of FVG
         HalfFillCE,  // Price reaches 50% Consequent Encroachment (CE)
-        FullFill     // Price fully covers the opposite edge of FVG (BottomPrice for Buy, TopPrice for Sell)
+        FullFill     // Price fully covers the opposite edge of FVG
+    }
+
+    /// <summary>
+    /// Type of ICT Open Gap (NWOG / NDOG).
+    /// </summary>
+    public enum OpenGapType
+    {
+        NWOG, // New Week Open Gap
+        NDOG  // New Day Open Gap
     }
 
     /// <summary>

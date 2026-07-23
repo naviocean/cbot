@@ -23,6 +23,9 @@ namespace cAlgo.Robots
         [Parameter("Enable OB Logic", Group = "1. Logic Switches", DefaultValue = true)]
         public bool EnableObLogic { get; set; }
 
+        [Parameter("Enable NWOG Logic", Group = "1. Logic Switches", DefaultValue = true)]
+        public bool EnableOpenGapLogic { get; set; }
+
         // ==========================================
         // PARAMETERS: ENGINE THRESHOLDS
         // ==========================================
@@ -52,6 +55,9 @@ namespace cAlgo.Robots
 
         [Parameter("Show OB Boxes", Group = "3. Visual Render", DefaultValue = true)]
         public bool ShowObVisuals { get; set; }
+
+        [Parameter("Show Open Gap Lines", Group = "3. Visual Render", DefaultValue = true)]
+        public bool ShowOpenGapVisuals { get; set; }
 
         // ==========================================
         // PARAMETERS: TRADE EXECUTION
@@ -126,8 +132,14 @@ namespace cAlgo.Robots
                     _renderer.DrawOrderBlock(ob, true, autoClean: true);
             }
 
+            if (ShowOpenGapVisuals && EnableOpenGapLogic)
+            {
+                foreach (var gap in _smcMatrix.NwogEngine.ActiveGaps)
+                    _renderer.DrawOpenGap(gap, true);
+            }
+
             string zoneText = _smcMatrix.RangeEngine.GetZone(Symbol.Ask).ToString();
-            Chart.DrawStaticText("SMC_BOT_PANEL", $"[SMC Bot] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Gold);
+            Chart.DrawStaticText("SMC_BOT_PANEL", $"[SMC Bot] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count()} | Unicorns: {_smcMatrix.UnicornDetector.DetectedUnicorns.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Gold);
         }
     }
 }

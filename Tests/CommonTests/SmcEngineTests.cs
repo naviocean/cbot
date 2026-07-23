@@ -16,6 +16,8 @@ namespace CommonTests
             TestLiquiditySweep();
             TestOrderBlockEngine();
             TestDealingRangeEngine();
+            TestNwogEngine();
+            TestIctUnicornDetector();
             TestConfluenceMatrix();
         }
 
@@ -23,8 +25,6 @@ namespace CommonTests
         {
             var fvgEngine = new FvgEngine { MinGapPips = 1.0 };
             
-            // Mock Bullish FVG: Bar0 (High=100), Bar1 (Impulse), Bar2 (Low=105) -> Gap [100, 105] = 5 pips
-            // Since FvgEngine requires Bars data, we test data structures and logic state:
             var buyFvg = new FairValueGap
             {
                 Id = 1,
@@ -95,6 +95,44 @@ namespace CommonTests
             TestRunner.Assert(rangeEngine.GetZone(110.0) == MarketZone.Equilibrium, "Price 110.0 is at Equilibrium");
         }
 
+        private static void TestNwogEngine()
+        {
+            var nwogEngine = new NwogEngine { MinGapPips = 0.5 };
+            TestRunner.Assert(nwogEngine.MinGapPips == 0.5, "NwogEngine initializes with MinGapPips = 0.5");
+            TestRunner.Assert(nwogEngine.AllGaps.Count == 0, "NwogEngine starts with 0 open gaps");
+        }
+
+        private static void TestIctUnicornDetector()
+        {
+            var unicornDetector = new IctUnicornDetector();
+            var breaker = new OrderBlock
+            {
+                Id = 1,
+                Type = ObType.BreakerBlock,
+                Direction = cAlgo.API.TradeType.Buy,
+                TopPrice = 110.0,
+                BottomPrice = 100.0,
+                IsMitigated = false
+            };
+
+            var fvg = new FairValueGap
+            {
+                Id = 1,
+                Direction = cAlgo.API.TradeType.Buy,
+                TopPrice = 108.0,
+                BottomPrice = 102.0,
+                Status = FvgStatus.Active
+            };
+
+            unicornDetector.Update(new[] { breaker }, new[] { fvg });
+
+            TestRunner.Assert(unicornDetector.DetectedUnicorns.Count == 1, "IctUnicornDetector detects 1 valid Buy Unicorn setup");
+            var unicorn = unicornDetector.GetLatestBuyUnicorn();
+            TestRunner.Assert(unicorn != null, "Latest Buy Unicorn setup is retrieved");
+            TestRunner.Assert(unicorn.OverlapTopPrice == 108.0, "Unicorn overlap top price math is 108.0");
+            TestRunner.Assert(unicorn.OverlapBottomPrice == 102.0, "Unicorn overlap bottom price math is 102.0");
+        }
+
         private static void TestConfluenceMatrix()
         {
             var matrix = new SmcConfluenceMatrix();
@@ -103,6 +141,8 @@ namespace CommonTests
             TestRunner.Assert(matrix.LiquidityEngine != null, "SmcConfluenceMatrix initializes LiquidityEngine");
             TestRunner.Assert(matrix.ObEngine != null, "SmcConfluenceMatrix initializes ObEngine");
             TestRunner.Assert(matrix.RangeEngine != null, "SmcConfluenceMatrix initializes RangeEngine");
+            TestRunner.Assert(matrix.NwogEngine != null, "SmcConfluenceMatrix initializes NwogEngine");
+            TestRunner.Assert(matrix.UnicornDetector != null, "SmcConfluenceMatrix initializes UnicornDetector");
         }
     }
 }
