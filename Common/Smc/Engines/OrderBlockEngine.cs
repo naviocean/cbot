@@ -7,7 +7,7 @@ namespace RedWave.Common.Smc
 {
     /// <summary>
     /// Engine for detecting High-Probability ICT Order Blocks, Breaker Blocks, and Mitigation Blocks.
-    /// Filters noise by requiring opposite color candle before displacement and strict mitigation cleanup.
+    /// Requires Market Structure Break (BOS/ChoCH/MSS) + FVG Displacement for genuine ICT Order Blocks.
     /// </summary>
     public class OrderBlockEngine
     {
@@ -18,6 +18,11 @@ namespace RedWave.Common.Smc
         /// Maximum number of active Order Blocks to keep per direction (prevents visual clutter).
         /// </summary>
         public int MaxActiveObPerDirection { get; set; } = 3;
+
+        /// <summary>
+        /// Use candle body bounds (Open to Close) for clean ICT OB boxes.
+        /// </summary>
+        public bool UseBodyBounds { get; set; } = true;
 
         /// <summary>
         /// Active (unmitigated) Order Blocks, capped at MaxActiveObPerDirection for clean chart rendering.
@@ -36,7 +41,7 @@ namespace RedWave.Common.Smc
 
         public IReadOnlyList<OrderBlock> AllOrderBlocks => _orderBlocks.AsReadOnly();
 
-        public void Update(Bars bars, IEnumerable<FairValueGap> activeFvgs, int currBarIndex = -1)
+        public void Update(Bars bars, IEnumerable<FairValueGap> activeFvgs, IEnumerable<StructureEvent> structureEvents, int currBarIndex = -1)
         {
             if (bars == null || bars.Count < 4)
                 return;
@@ -71,43 +76,59 @@ namespace RedWave.Common.Smc
                 }
             }
 
-            // 2. Identify new High-Probability Order Block associated with recent FVG displacement
+            // 2. Identify new High-Probability Order Block (Must be backed by FVG + Structure Break BOS/ChoCH/MSS)
             var recentFvg = activeFvgs?.LastOrDefault(f => f.CreatedBarIndex == currBarIndex - 1 && !f.IsInversion);
             if (recentFvg != null)
             {
-                int obIndex = recentFvg.CreatedBarIndex - 1;
-                if (obIndex >= 0)
+                // ICT Rule: Genuine OB MUST accompany a Structure Event (BOS / ChoCH / MSS)
+                bool hasStructureBreak = structureEvents != null && 
+                    structureEvents.Any(e => Math.Abs(e.TriggerBarIndex - recentFvg.CreatedBarIndex) <= 3 && e.Direction == recentFvg.Direction);
+
+                if (hasStructureBreak)
                 {
-                    double obOpen = bars.OpenPrices[obIndex];
-                    double obClose = bars.ClosePrices[obIndex];
-                    double obHigh = bars.HighPrices[obIndex];
-                    double obLow = bars.LowPrices[obIndex];
-
-                    // ICT Rule: Bullish OB MUST be a Bearish candle (Close < Open) before Buy FVG expansion
-                    // Bearish OB MUST be a Bullish candle (Close > Open) before Sell FVG expansion
-                    bool isValidBullishOb = recentFvg.Direction == TradeType.Buy && obClose <= obOpen;
-                    bool isValidBearishOb = recentFvg.Direction == TradeType.Sell && obClose >= obOpen;
-
-                    if (isValidBullishOb || isValidBearishOb)
+                    int obIndex = recentFvg.CreatedBarIndex - 1;
+                    if (obIndex >= 0)
                     {
-                        // Prevent duplicate OBs for the same bar
-                        if (!_orderBlocks.Any(ob => ob.BarIndex == obIndex))
+                        double obOpen = bars.OpenPrices[obIndex];
+                        double obClose = bars.ClosePrices[obIndex];
+                        double obHigh = bars.HighPrices[obIndex];
+                        double obLow = bars.LowPrices[obIndex];
+
+                        // ICT Rule: Bullish OB MUST be a Bearish candle (Close < Open) before Buy FVG expansion
+                        // Bearish OB MUST be a Bullish candle (Close > Open) before Sell FVG expansion
+                        bool isValidBullishOb = recentFvg.Direction == TradeType.Buy && obClose <= obOpen;
+                        bool isValidBearishOb = recentFvg.Direction == TradeType.Sell && obClose >= obOpen;
+
+                        if (isValidBullishOb || isValidBearishOb)
                         {
-                            _orderBlocks.Add(new OrderBlock
+                            // Prevent duplicate OBs for the same bar
+                            if (!_orderBlocks.Any(ob => ob.BarIndex == obIndex))
                             {
-                                Id = ++_idCounter,
-                                Type = recentFvg.Direction == TradeType.Buy ? ObType.BullishOB : ObType.BearishOB,
-                                Direction = recentFvg.Direction,
-                                TopPrice = obHigh,
-                                BottomPrice = obLow,
-                                BarIndex = obIndex,
-                                CreatedTime = bars.OpenTimes[obIndex],
-                                AssociatedFvgId = recentFvg.Id,
-                                IsMitigated = false
-                            });
+                                double topPrice = UseBodyBounds ? Math.Max(obOpen, obClose) : obHigh;
+                                double bottomPrice = UseBodyBounds ? Math.Min(obOpen, obClose) : obLow;
+
+                                _orderBlocks.Add(new OrderBlock
+                                {
+                                    Id = ++_idCounter,
+                                    Type = recentFvg.Direction == TradeType.Buy ? ObType.BullishOB : ObType.BearishOB,
+                                    Direction = recentFvg.Direction,
+                                    TopPrice = topPrice,
+                                    BottomPrice = bottomPrice,
+                                    BarIndex = obIndex,
+                                    CreatedTime = bars.OpenTimes[obIndex],
+                                    AssociatedFvgId = recentFvg.Id,
+                                    IsMitigated = false
+                                });
+                            }
                         }
                     }
                 }
+            }
+
+            // Trim memory buffer if capacity exceeded
+            if (_orderBlocks.Count > 100)
+            {
+                _orderBlocks.RemoveAll(ob => ob.IsMitigated);
             }
         }
 

@@ -35,7 +35,7 @@ namespace RedWave.Common.Smc
             FvgEngine.Update(bars, barIndex, pipSize);
             StructureEngine.Update(bars, barIndex, FvgEngine.AllFvgs);
             LiquidityEngine.Update(bars, barIndex, pipSize);
-            ObEngine.Update(bars, FvgEngine.ActiveFvgs, barIndex);
+            ObEngine.Update(bars, FvgEngine.ActiveFvgs, StructureEngine.Events, barIndex);
             RangeEngine.Update(StructureEngine.CurrentSwingHigh, StructureEngine.CurrentSwingLow);
             NwogEngine.Update(bars, barIndex, pipSize);
             UnicornDetector.Update(ObEngine.ActiveOrderBlocks, FvgEngine.ActiveFvgs);

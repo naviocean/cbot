@@ -139,10 +139,10 @@ namespace cAlgo.Robots
                     _renderer.DrawStructure(evt, true);
             }
 
-            if (ShowObVisuals && EnableObLogic)
+            if (EnableObLogic)
             {
-                foreach (var ob in _smcMatrix.ObEngine.ActiveOrderBlocks)
-                    _renderer.DrawOrderBlock(ob, true, autoClean: true);
+                foreach (var ob in _smcMatrix.ObEngine.AllOrderBlocks)
+                    _renderer.DrawOrderBlock(ob, ShowObVisuals, autoClean: true);
             }
 
             if (ShowOpenGapVisuals && EnableOpenGapLogic)
@@ -158,7 +158,7 @@ namespace cAlgo.Robots
             }
 
             string zoneText = _smcMatrix.RangeEngine.GetZone(Symbol.Ask).ToString();
-            Chart.DrawStaticText("SMC_BOT_PANEL", $"[SMC Bot] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count(f => !f.IsInversion)} | iFVGs: {_smcMatrix.FvgEngine.InversionFvgs.Count()} | Unicorns: {_smcMatrix.UnicornDetector.DetectedUnicorns.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Gold);
+            Chart.DrawStaticText("SMC_BOT_PANEL", $"[SMC Bot] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count(f => !f.IsInversion)} | iFVGs: {_smcMatrix.FvgEngine.InversionFvgs.Count()} | OBs: {_smcMatrix.ObEngine.ActiveOrderBlocks.Count()} | Unicorns: {_smcMatrix.UnicornDetector.DetectedUnicorns.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Gold);
         }
     }
 }
