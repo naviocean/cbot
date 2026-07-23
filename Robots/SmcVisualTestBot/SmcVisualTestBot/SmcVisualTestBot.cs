@@ -127,35 +127,25 @@ namespace cAlgo.Robots
 
         private void RenderVisuals()
         {
-            if (EnableFvgLogic)
-            {
-                foreach (var fvg in _smcMatrix.FvgEngine.AllFvgs)
-                    _renderer.DrawFvg(fvg, ShowFvgVisuals, ShowIfvgVisuals, autoClean: true);
-            }
+            // Render FVG & iFVG
+            foreach (var fvg in _smcMatrix.FvgEngine.AllFvgs)
+                _renderer.DrawFvg(fvg, EnableFvgLogic && ShowFvgVisuals, ShowIfvgVisuals, autoClean: true);
 
-            if (ShowStructureVisuals && EnableStructureLogic)
-            {
-                foreach (var evt in _smcMatrix.StructureEngine.Events)
-                    _renderer.DrawStructure(evt, true);
-            }
+            // Render Structure Lines
+            foreach (var evt in _smcMatrix.StructureEngine.Events)
+                _renderer.DrawStructure(evt, EnableStructureLogic && ShowStructureVisuals);
 
-            if (EnableObLogic)
-            {
-                foreach (var ob in _smcMatrix.ObEngine.AllOrderBlocks)
-                    _renderer.DrawOrderBlock(ob, ShowObVisuals, autoClean: true);
-            }
+            // Render Order Blocks
+            foreach (var ob in _smcMatrix.ObEngine.AllOrderBlocks)
+                _renderer.DrawOrderBlock(ob, EnableObLogic && ShowObVisuals, autoClean: true);
 
-            if (ShowOpenGapVisuals && EnableOpenGapLogic)
-            {
-                foreach (var gap in _smcMatrix.NwogEngine.ActiveGaps)
-                    _renderer.DrawOpenGap(gap, true);
-            }
+            // Render Open Gaps
+            foreach (var gap in _smcMatrix.NwogEngine.AllGaps)
+                _renderer.DrawOpenGap(gap, EnableOpenGapLogic && ShowOpenGapVisuals);
 
-            if (ShowUnicornVisuals && EnableUnicornLogic)
-            {
-                foreach (var unicorn in _smcMatrix.UnicornDetector.DetectedUnicorns)
-                    _renderer.DrawUnicorn(unicorn, true);
-            }
+            // Render Unicorn Setups
+            foreach (var unicorn in _smcMatrix.UnicornDetector.DetectedUnicorns)
+                _renderer.DrawUnicorn(unicorn, EnableUnicornLogic && ShowUnicornVisuals);
 
             string zoneText = _smcMatrix.RangeEngine.GetZone(Symbol.Ask).ToString();
             Chart.DrawStaticText("SMC_BOT_PANEL", $"[SMC Bot] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count(f => !f.IsInversion)} | iFVGs: {_smcMatrix.FvgEngine.InversionFvgs.Count()} | OBs: {_smcMatrix.ObEngine.ActiveOrderBlocks.Count()} | Unicorns: {_smcMatrix.UnicornDetector.DetectedUnicorns.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Gold);
