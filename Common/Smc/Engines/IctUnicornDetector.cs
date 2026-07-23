@@ -6,7 +6,7 @@ using cAlgo.API;
 namespace RedWave.Common.Smc
 {
     /// <summary>
-    /// Engine for detecting the ICT Unicorn Setup (High-probability confluence of Breaker Block + FVG overlap).
+    /// Engine for detecting the ICT Unicorn Setup (High-probability confluence of Breaker Block / OB + FVG overlap).
     /// </summary>
     public class IctUnicornDetector
     {
@@ -20,30 +20,29 @@ namespace RedWave.Common.Smc
             if (orderBlocks == null || fvgs == null)
                 return;
 
-            var breakers = orderBlocks.Where(ob => ob.Type == ObType.BreakerBlock && !ob.IsMitigated).ToList();
-            var activeFvgs = fvgs.Where(f => f.Status == FvgStatus.Active || f.Status == FvgStatus.PartiallyFilled).ToList();
+            var activeObs = orderBlocks.Where(ob => !ob.IsMitigated).ToList();
+            var activeFvgs = fvgs.Where(f => f.Status == FvgStatus.Active || f.Status == FvgStatus.PartiallyFilled || f.Status == FvgStatus.Inversion).ToList();
 
-            foreach (var breaker in breakers)
+            foreach (var ob in activeObs)
             {
                 foreach (var fvg in activeFvgs)
                 {
-                    if (breaker.Direction != fvg.Direction)
+                    if (ob.Direction != fvg.Direction)
                         continue;
 
-                    // Check for price range overlap between Breaker Block and FVG
-                    double overlapTop = Math.Min(breaker.TopPrice, fvg.TopPrice);
-                    double overlapBottom = Math.Max(breaker.BottomPrice, fvg.BottomPrice);
+                    // Check for price range overlap between Order/Breaker Block and FVG
+                    double overlapTop = Math.Min(ob.TopPrice, fvg.TopPrice);
+                    double overlapBottom = Math.Max(ob.BottomPrice, fvg.BottomPrice);
 
                     if (overlapTop > overlapBottom) // Valid geographic overlap
                     {
-                        string existingKey = $"{breaker.Id}_{fvg.Id}";
-                        if (!_unicorns.Any(u => u.BreakerBlock.Id == breaker.Id && u.Fvg.Id == fvg.Id))
+                        if (!_unicorns.Any(u => u.BreakerBlock.Id == ob.Id && u.Fvg.Id == fvg.Id))
                         {
                             _unicorns.Add(new UnicornSetup
                             {
                                 Id = ++_idCounter,
-                                Direction = breaker.Direction,
-                                BreakerBlock = breaker,
+                                Direction = ob.Direction,
+                                BreakerBlock = ob,
                                 Fvg = fvg,
                                 OverlapTopPrice = overlapTop,
                                 OverlapBottomPrice = overlapBottom,
