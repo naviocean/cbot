@@ -1,3 +1,4 @@
+using System;
 using cAlgo.API;
 
 namespace RedWave.Common.Smc
@@ -37,8 +38,13 @@ namespace RedWave.Common.Smc
             LiquidityEngine.Update(bars, barIndex, pipSize);
             ObEngine.Update(bars, FvgEngine.ActiveFvgs, StructureEngine.Events, barIndex);
             RangeEngine.Update(StructureEngine.CurrentSwingHigh, StructureEngine.CurrentSwingLow);
-            NwogEngine.Update(bars, barIndex, pipSize);
-            UnicornDetector.Update(ObEngine.ActiveOrderBlocks, FvgEngine.ActiveFvgs);
+            DateTime? barTime = null;
+            if (bars != null && bars.Count > 0)
+            {
+                int idx = (barIndex >= 0 && barIndex < bars.Count) ? barIndex : bars.Count - 1;
+                barTime = bars.OpenTimes[idx];
+            }
+            UnicornDetector.Update(ObEngine.ActiveOrderBlocks, FvgEngine.ActiveFvgs, barTime);
         }
 
         public bool IsValidBuySetup(double currentPrice, out FairValueGap targetFvg, out OrderBlock targetOb)
@@ -81,6 +87,7 @@ namespace RedWave.Common.Smc
             FvgEngine.Reset();
             LiquidityEngine.Reset();
             ObEngine.Reset();
+            RangeEngine.Reset();
             NwogEngine.Reset();
             UnicornDetector.Reset();
         }

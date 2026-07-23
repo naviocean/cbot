@@ -15,13 +15,21 @@ namespace RedWave.Common.Smc
 
         public IReadOnlyList<UnicornSetup> DetectedUnicorns => _unicorns.AsReadOnly();
 
-        public void Update(IEnumerable<OrderBlock> orderBlocks, IEnumerable<FairValueGap> fvgs)
+        public void Update(IEnumerable<OrderBlock> orderBlocks, IEnumerable<FairValueGap> fvgs, DateTime? barTime = null)
         {
             if (orderBlocks == null || fvgs == null)
                 return;
 
-            var activeObs = orderBlocks.Where(ob => !ob.IsMitigated).ToList();
-            var activeFvgs = fvgs.Where(f => f.Status == FvgStatus.Active || f.Status == FvgStatus.PartiallyFilled || f.Status == FvgStatus.Inversion).ToList();
+            var activeObs = orderBlocks
+                .Where(ob => !ob.IsMitigated && ob.Type == ObType.BreakerBlock)
+                .TakeLast(10)
+                .ToList();
+            var activeFvgs = fvgs
+                .Where(f => f.Status == FvgStatus.Active || f.Status == FvgStatus.PartiallyFilled || f.Status == FvgStatus.Inversion)
+                .TakeLast(20)
+                .ToList();
+
+            DateTime detectedTime = barTime ?? DateTime.UtcNow;
 
             foreach (var ob in activeObs)
             {
@@ -30,7 +38,7 @@ namespace RedWave.Common.Smc
                     if (ob.Direction != fvg.Direction)
                         continue;
 
-                    // Check for price range overlap between Order/Breaker Block and FVG
+                    // Check for price range overlap between Breaker Block and FVG
                     double overlapTop = Math.Min(ob.TopPrice, fvg.TopPrice);
                     double overlapBottom = Math.Max(ob.BottomPrice, fvg.BottomPrice);
 
@@ -46,7 +54,7 @@ namespace RedWave.Common.Smc
                                 Fvg = fvg,
                                 OverlapTopPrice = overlapTop,
                                 OverlapBottomPrice = overlapBottom,
-                                DetectedTime = DateTime.UtcNow
+                                DetectedTime = detectedTime
                             });
                         }
                     }

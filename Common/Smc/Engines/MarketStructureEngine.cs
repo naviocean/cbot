@@ -17,10 +17,12 @@ namespace RedWave.Common.Smc
         public int PivotPeriod { get; set; } = 2;
         public bool RequireBodyClose { get; set; } = true;
 
+        private TradeType? _lastDirection;
+
         public PivotPoint CurrentSwingHigh { get; private set; }
         public PivotPoint CurrentSwingLow { get; private set; }
         public BreakType LastBreakType { get; private set; }
-        public TradeType LastDirection { get; private set; }
+        public TradeType LastDirection => _lastDirection ?? TradeType.Buy;
         public StructureEvent LatestEvent => _events.LastOrDefault();
 
         public IReadOnlyList<PivotPoint> Pivots => _pivots.AsReadOnly();
@@ -55,9 +57,9 @@ namespace RedWave.Common.Smc
 
             for (int i = 1; i <= PivotPeriod; i++)
             {
-                if (bars.HighPrices[index - i] >= candHigh || bars.HighPrices[index + i] > candHigh)
+                if (bars.HighPrices[index - i] >= candHigh || bars.HighPrices[index + i] >= candHigh)
                     isHigh = false;
-                if (bars.LowPrices[index - i] <= candLow || bars.LowPrices[index + i] < candLow)
+                if (bars.LowPrices[index - i] <= candLow || bars.LowPrices[index + i] <= candLow)
                     isLow = false;
             }
 
@@ -102,7 +104,7 @@ namespace RedWave.Common.Smc
             {
                 BreakType bType = BreakType.BOS;
 
-                if (LastDirection == TradeType.Sell)
+                if (_lastDirection.HasValue && _lastDirection.Value == TradeType.Sell)
                 {
                     // Check if reversal is accompanied by FVG (ICT MSS Rule)
                     bool hasFvg = activeFvgs != null && activeFvgs.Any(f => Math.Abs(f.CreatedBarIndex - barIndex) <= 2);
@@ -121,13 +123,14 @@ namespace RedWave.Common.Smc
 
                 _events.Add(evt);
                 LastBreakType = bType;
-                LastDirection = TradeType.Buy;
+                _lastDirection = TradeType.Buy;
+                CurrentSwingHigh = null; // Reset to prevent continuous duplicate event emission
             }
             else if (testLowPrice < CurrentSwingLow.Price)
             {
                 BreakType bType = BreakType.BOS;
 
-                if (LastDirection == TradeType.Buy)
+                if (_lastDirection.HasValue && _lastDirection.Value == TradeType.Buy)
                 {
                     // Check if reversal is accompanied by FVG (ICT MSS Rule)
                     bool hasFvg = activeFvgs != null && activeFvgs.Any(f => Math.Abs(f.CreatedBarIndex - barIndex) <= 2);
@@ -146,7 +149,8 @@ namespace RedWave.Common.Smc
 
                 _events.Add(evt);
                 LastBreakType = bType;
-                LastDirection = TradeType.Sell;
+                _lastDirection = TradeType.Sell;
+                CurrentSwingLow = null; // Reset to prevent continuous duplicate event emission
             }
         }
 
@@ -156,6 +160,7 @@ namespace RedWave.Common.Smc
             _events.Clear();
             CurrentSwingHigh = null;
             CurrentSwingLow = null;
+            _lastDirection = null;
         }
     }
 }

@@ -69,8 +69,8 @@ namespace RedWave.Common.Smc
             {
                 if (ob.Type == ObType.BreakerBlock)
                 {
-                    if (ob.Direction == TradeType.Buy && low <= ob.TopPrice) ob.IsMitigated = true;
-                    else if (ob.Direction == TradeType.Sell && high >= ob.BottomPrice) ob.IsMitigated = true;
+                    if (ob.Direction == TradeType.Buy && low < ob.BottomPrice) ob.IsMitigated = true;
+                    else if (ob.Direction == TradeType.Sell && high > ob.TopPrice) ob.IsMitigated = true;
                     continue;
                 }
 
@@ -119,7 +119,7 @@ namespace RedWave.Common.Smc
             }
 
             // 2. Identify new High-Probability Order Block (Must be backed by FVG + Structure Break BOS/ChoCH/MSS)
-            var recentFvg = activeFvgs?.LastOrDefault(f => f.CreatedBarIndex == currBarIndex - 1 && !f.IsInversion);
+            var recentFvg = activeFvgs?.LastOrDefault(f => Math.Abs(f.CreatedBarIndex - currBarIndex) <= 2 && !f.IsInversion);
             if (recentFvg != null)
             {
                 bool hasStructureBreak = structureEvents != null && 

@@ -36,5 +36,11 @@ namespace RedWave.Common.Smc
         {
             return GetZone(price) == MarketZone.Premium;
         }
+
+        public void Reset()
+        {
+            SwingHigh = 0;
+            SwingLow = 0;
+        }
     }
 }

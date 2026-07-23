@@ -107,11 +107,13 @@ namespace RedWave.Common.Smc
             });
         }
 
-        public bool HasRecentSweep(LiquidityType type, int withinBars = 10)
+        public bool HasRecentSweep(LiquidityType type, int currBarIndex = -1, int withinBars = 10)
         {
-            var lastSweep = _sweeps.LastOrDefault();
-            if (lastSweep == null) return false;
-            return lastSweep.Pool.Type == type && lastSweep.ClosedBackInside;
+            var lastSweep = _sweeps.LastOrDefault(s =>
+                s.Pool.Type == type &&
+                s.ClosedBackInside &&
+                (currBarIndex < 0 || Math.Abs(s.SweepBarIndex - currBarIndex) <= withinBars));
+            return lastSweep != null;
         }
 
         public void Reset()

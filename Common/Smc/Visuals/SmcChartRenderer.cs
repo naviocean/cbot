@@ -6,7 +6,7 @@ namespace RedWave.Common.Smc
 {
     /// <summary>
     /// Handles visual rendering of SMC/ICT elements on the cTrader Chart Canvas.
-    /// Uses Frame-Tracking for 100% flicker-free rendering and instant stale object purging.
+    /// Positions labels dynamically at the start of zones so they are always visible right on the pattern.
     /// </summary>
     public class SmcChartRenderer
     {
@@ -25,6 +25,10 @@ namespace RedWave.Common.Smc
         // OB Colors: Royal Blue (Bullish) vs Dark Purple (Bearish)
         public Color BullishObColor { get; set; } = Color.FromArgb(70, 30, 144, 255);   // Semi-transparent Royal Blue
         public Color BearishObColor { get; set; } = Color.FromArgb(70, 153, 50, 204);  // Semi-transparent Dark Purple
+
+        // Breaker Block Colors: Teal (Bullish Breaker) vs OrangeRed (Bearish Breaker)
+        public Color BullishBreakerColor { get; set; } = Color.FromArgb(70, 0, 201, 167);  // Semi-transparent Teal
+        public Color BearishBreakerColor { get; set; } = Color.FromArgb(70, 255, 69, 0);   // Semi-transparent OrangeRed
 
         // ICT Unicorn Setup Colors: Gold (Bullish Unicorn) vs HotPink/Violet (Bearish Unicorn)
         public Color BullishUnicornColor { get; set; } = Color.FromArgb(90, 255, 215, 0);  // High-contrast Gold
@@ -139,11 +143,13 @@ namespace RedWave.Common.Smc
             TrackKey(key + "_TXT");
 
             Color color = unicorn.Direction == TradeType.Buy ? BullishUnicornColor : BearishUnicornColor;
-            Color textCol = unicorn.Direction == TradeType.Buy ? Color.Gold : Color.DeepPink;
+            Color textCol = unicorn.Direction == TradeType.Buy ? Color.Yellow : Color.Magenta;
+
+            int startBar = Math.Min(unicorn.BreakerBlock.BarIndex, unicorn.Fvg.CreatedBarIndex);
 
             var rect = _chart.DrawRectangle(
                 key,
-                Math.Min(unicorn.BreakerBlock.BarIndex, unicorn.Fvg.CreatedBarIndex),
+                startBar,
                 unicorn.OverlapTopPrice,
                 _chart.LastVisibleBarIndex + 5,
                 unicorn.OverlapBottomPrice,
@@ -152,7 +158,10 @@ namespace RedWave.Common.Smc
             rect.IsFilled = true;
 
             string label = unicorn.Direction == TradeType.Buy ? $"🦄 Unicorn (Buy) #{unicorn.Id}" : $"🦄 Unicorn (Sell) #{unicorn.Id}";
-            _chart.DrawText(key + "_TXT", label, unicorn.Fvg.CreatedBarIndex, unicorn.OverlapTopPrice, textCol);
+            
+            // Draw text label at startBar at the bottom price for Buy (or top price for Sell) so it never collides with OB label
+            double textY = unicorn.Direction == TradeType.Buy ? unicorn.OverlapBottomPrice : unicorn.OverlapTopPrice;
+            _chart.DrawText(key + "_TXT", label, startBar, textY, textCol);
         }
 
         public void DrawOpenGap(OpenGapLevel gap, bool showVisual)
@@ -171,18 +180,17 @@ namespace RedWave.Common.Smc
             Color color = gap.Type == OpenGapType.NWOG ? NwogColor : NdogColor;
             string label = $"{gap.Type} #{gap.Id}";
 
-            _chart.DrawTrendLine(
+            var gapRect = _chart.DrawRectangle(
                 key,
                 gap.BarIndex,
-                gap.MidPrice,
+                gap.TopPrice,
                 _chart.LastVisibleBarIndex + 5,
-                gap.MidPrice,
-                color,
-                2,
-                LineStyle.LinesDots
+                gap.BottomPrice,
+                color
             );
+            gapRect.IsFilled = true;
 
-            _chart.DrawText(key + "_TXT", label, gap.BarIndex, gap.MidPrice, color);
+            _chart.DrawText(key + "_TXT", label, gap.BarIndex, gap.TopPrice, color);
         }
 
         public void DrawStructure(StructureEvent evt, bool showVisual)
@@ -231,7 +239,7 @@ namespace RedWave.Common.Smc
         public void DrawOrderBlock(OrderBlock ob, bool showVisual, bool autoClean = true)
         {
             if (_chart == null || ob == null) return;
-            string key = $"SMC_OB_{ob.BarIndex}_{(int)ob.Type}";
+            string key = $"SMC_OB_{ob.Id}";
 
             if (!showVisual || (autoClean && ob.IsMitigated))
             {
@@ -241,7 +249,10 @@ namespace RedWave.Common.Smc
             TrackKey(key);
             TrackKey(key + "_TXT");
 
-            Color color = ob.Direction == TradeType.Buy ? BullishObColor : BearishObColor;
+            Color color = ob.Type == ObType.BreakerBlock
+                ? (ob.Direction == TradeType.Buy ? BullishBreakerColor : BearishBreakerColor)
+                : (ob.Direction == TradeType.Buy ? BullishObColor : BearishObColor);
+
             Color textCol = ob.Direction == TradeType.Buy ? Color.DodgerBlue : Color.MediumOrchid;
 
             var rect = _chart.DrawRectangle(
@@ -254,7 +265,8 @@ namespace RedWave.Common.Smc
             );
             rect.IsFilled = true;
 
-            string label = ob.Direction == TradeType.Buy ? $"OB (Buy) #{ob.Id}" : $"OB (Sell) #{ob.Id}";
+            string obTypeLabel = ob.Type == ObType.BreakerBlock ? "Breaker" : "OB";
+            string label = $"{obTypeLabel} ({ob.Direction}) #{ob.Id}";
             _chart.DrawText(key + "_TXT", label, ob.BarIndex, ob.TopPrice, textCol);
         }
     }

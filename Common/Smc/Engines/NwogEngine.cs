@@ -38,13 +38,19 @@ namespace RedWave.Common.Smc
             double high = bars.HighPrices[currBarIndex];
             double low = bars.LowPrices[currBarIndex];
 
-            // 1. Update fill status of active gaps
+            // 1. Update fill status of active gaps (mitigated when price retests 50% MidPrice)
             foreach (var gap in ActiveGaps.ToList())
             {
-                if (low <= gap.BottomPrice && high >= gap.TopPrice)
+                if (low <= gap.MidPrice && high >= gap.MidPrice)
                 {
                     gap.IsFilled = true;
                 }
+            }
+
+            // Memory cleanup for old filled gaps
+            if (_gaps.Count > 100)
+            {
+                _gaps.RemoveAll(g => g.IsFilled && (currBarIndex - g.BarIndex > 500));
             }
 
             // 2. Detect New Week Open Gap (NWOG)

@@ -121,7 +121,7 @@ namespace RedWave.Common.Smc
             }
 
             // Trim memory buffer if capacity exceeded
-            if (_fvgs.Count > MaxActiveMemory * 2)
+            if (_fvgs.Count > MaxActiveMemory)
             {
                 _fvgs.RemoveAll(f => f.Status == FvgStatus.Mitigated || f.Status == FvgStatus.Invalidated);
             }
@@ -133,20 +133,18 @@ namespace RedWave.Common.Smc
             double low = bars.LowPrices[currentBarIndex];
             double close = bars.ClosePrices[currentBarIndex];
 
-            foreach (var fvg in ActiveFvgs.ToList())
+            foreach (var fvg in _fvgs.Where(f => f.Status != FvgStatus.Mitigated && f.Status != FvgStatus.Invalidated).ToList())
             {
-                // Handle Inversion FVG (iFVG) status checks
+                // Inversion FVG logic
                 if (fvg.IsInversion)
                 {
-                    if (fvg.Direction == TradeType.Buy) // Bullish iFVG (Support for BUY)
+                    if (fvg.Direction == TradeType.Buy && low <= fvg.BottomPrice)
                     {
-                        if (close < fvg.BottomPrice) fvg.Status = FvgStatus.Invalidated;
-                        else if (low <= fvg.TopPrice) fvg.Status = FvgStatus.Mitigated;
+                        fvg.Status = FvgStatus.Mitigated;
                     }
-                    else // Bearish iFVG (Resistance for SELL)
+                    else if (fvg.Direction == TradeType.Sell && high >= fvg.TopPrice)
                     {
-                        if (close > fvg.TopPrice) fvg.Status = FvgStatus.Invalidated;
-                        else if (high >= fvg.BottomPrice) fvg.Status = FvgStatus.Mitigated;
+                        fvg.Status = FvgStatus.Mitigated;
                     }
                     continue;
                 }
@@ -184,13 +182,14 @@ namespace RedWave.Common.Smc
                                 break;
                         }
 
+                        if (low <= fvg.ConsequentEncroachment && fvg.Status == FvgStatus.Active)
+                        {
+                            fvg.Status = FvgStatus.PartiallyFilled;
+                        }
+
                         if (isMitigated)
                         {
                             fvg.Status = FvgStatus.Mitigated;
-                        }
-                        else if (low <= fvg.ConsequentEncroachment)
-                        {
-                            fvg.Status = FvgStatus.PartiallyFilled;
                         }
                     }
                 }
@@ -226,13 +225,14 @@ namespace RedWave.Common.Smc
                                 break;
                         }
 
+                        if (high >= fvg.ConsequentEncroachment && fvg.Status == FvgStatus.Active)
+                        {
+                            fvg.Status = FvgStatus.PartiallyFilled;
+                        }
+
                         if (isMitigated)
                         {
                             fvg.Status = FvgStatus.Mitigated;
-                        }
-                        else if (high >= fvg.ConsequentEncroachment)
-                        {
-                            fvg.Status = FvgStatus.PartiallyFilled;
                         }
                     }
                 }
