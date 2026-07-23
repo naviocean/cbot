@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="cTrader.Automate" Version="*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\Common\*.cs" Link="Common\%(FileName)%(Extension)" />
+    <Compile Include="..\..\..\Common\Smc\**\*.cs" Link="Common\Smc\%(RecursiveDir)%(FileName)%(Extension)" />
+  </ItemGroup>
+</Project>

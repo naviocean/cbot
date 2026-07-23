@@ -12,6 +12,7 @@ namespace RedWave.Common
         private Symbol _symbol;
         private string _label;
         private CLogger _logger;
+        private TradeExecutor _executor;
 
         // Trailing settings (in Pips)
         private bool _useTrailing;
@@ -47,13 +48,14 @@ namespace RedWave.Common
             _symbol = null;
             _label = "";
             _logger = null;
+            _executor = null;
 
             _useTrailing = false;
             _useBreakeven = false;
             _trackedPositions = new List<PositionTrack>();
         }
 
-        public bool Init(Robot robot, Symbol symbol, string label, CLogger logger = null)
+        public bool Init(Robot robot, Symbol symbol, string label, CLogger logger = null, TradeExecutor executor = null)
         {
             _logger = logger;
             if (robot == null || symbol == null)
@@ -64,6 +66,7 @@ namespace RedWave.Common
             _robot = robot;
             _symbol = symbol;
             _label = label;
+            _executor = executor ?? new TradeExecutor(robot, logger);
             return true;
         }
 
@@ -109,7 +112,7 @@ namespace RedWave.Common
 
         public void OnTick()
         {
-            if (_robot == null || _symbol == null) return;
+            if (_robot == null || _symbol == null || _executor == null) return;
 
             // Find all active positions belonging to this bot
             var activePositions = _robot.Positions.FindAll(_label, _symbol.Name);
@@ -147,21 +150,6 @@ namespace RedWave.Common
             }
         }
 
-        private double GetMinStopDistancePrice()
-        {
-            if (_symbol == null) return 0;
-            if (_symbol.MinDistanceType == SymbolMinDistanceType.Pips)
-            {
-                return PriceUtils.PipsToPrice(_symbol.MinStopLossDistance, _symbol);
-            }
-            else if (_symbol.MinDistanceType == SymbolMinDistanceType.Percentage)
-            {
-                double midPrice = (_symbol.Bid + _symbol.Ask) / 2.0;
-                return midPrice * (_symbol.MinStopLossDistance / 100.0);
-            }
-            return 0;
-        }
-
         private void ManageBreakeven(Position position, PositionTrack track)
         {
             double profitPips = position.Pips;
@@ -172,25 +160,18 @@ namespace RedWave.Common
 
             double? newSL = null;
 
-            // Calculate minimum allowed distance for Stop Loss
-            double minDist = GetMinStopDistancePrice();
-
             if (position.TradeType == TradeType.Buy)
             {
                 newSL = PriceUtils.NormalizePrice(position.EntryPrice + lockPriceOffset, _symbol);
-                
-                // Clamp by MinStopLossDistance to avoid invalid SL errors
-                double maxAllowedSL = PriceUtils.NormalizePrice(_symbol.Bid - minDist, _symbol);
-                if (newSL > maxAllowedSL)
-                {
-                    newSL = maxAllowedSL;
-                }
-
                 if (position.StopLoss == null || newSL > position.StopLoss)
                 {
                     _logger?.Info($"TrailingManager: Triggering Break-even for BUY #{position.Id}. New SL: {newSL}");
-                    var result = _robot.ModifyPosition(position, newSL, position.TakeProfit, ProtectionType.Absolute);
-                    if (result.IsSuccessful)
+                    var result = _executor.ModifyPositionByPrice(position, newSL, position.TakeProfit);
+                    if (result == null)
+                    {
+                        // Skipped due to negligible change
+                    }
+                    else if (result.IsSuccessful)
                     {
                         track.BreakEvenDone = true;
                     }
@@ -203,19 +184,15 @@ namespace RedWave.Common
             else if (position.TradeType == TradeType.Sell)
             {
                 newSL = PriceUtils.NormalizePrice(position.EntryPrice - lockPriceOffset, _symbol);
-
-                // Clamp by MinStopLossDistance to avoid invalid SL errors
-                double minAllowedSL = PriceUtils.NormalizePrice(_symbol.Ask + minDist, _symbol);
-                if (newSL < minAllowedSL)
-                {
-                    newSL = minAllowedSL;
-                }
-
                 if (position.StopLoss == null || newSL < position.StopLoss)
                 {
                     _logger?.Info($"TrailingManager: Triggering Break-even for SELL #{position.Id}. New SL: {newSL}");
-                    var result = _robot.ModifyPosition(position, newSL, position.TakeProfit, ProtectionType.Absolute);
-                    if (result.IsSuccessful)
+                    var result = _executor.ModifyPositionByPrice(position, newSL, position.TakeProfit);
+                    if (result == null)
+                    {
+                        // Skipped due to negligible change
+                    }
+                    else if (result.IsSuccessful)
                     {
                         track.BreakEvenDone = true;
                     }
@@ -250,19 +227,9 @@ namespace RedWave.Common
             double trailDistance = PriceUtils.PipsToPrice(_trailStepPips, _symbol);
             double sensitivityDistance = PriceUtils.PipsToPrice(_trailSensitivityPips, _symbol);
 
-            // Calculate minimum allowed distance for Stop Loss
-            double minDist = GetMinStopDistancePrice();
-
             if (position.TradeType == TradeType.Buy)
             {
                 newSL = PriceUtils.NormalizePrice(_symbol.Bid - trailDistance, _symbol);
-
-                // Clamp by MinStopLossDistance to avoid invalid SL errors
-                double maxAllowedSL = PriceUtils.NormalizePrice(_symbol.Bid - minDist, _symbol);
-                if (newSL > maxAllowedSL)
-                {
-                    newSL = maxAllowedSL;
-                }
 
                 if (position.StopLoss == null || newSL >= position.StopLoss + sensitivityDistance)
                 {
@@ -270,8 +237,12 @@ namespace RedWave.Common
                     if (position.StopLoss == null || newSL > position.StopLoss)
                     {
                         _logger?.Debug($"TrailingManager: Trailing BUY #{position.Id}. New SL: {newSL}");
-                        var result = _robot.ModifyPosition(position, newSL, position.TakeProfit, ProtectionType.Absolute);
-                        if (result.IsSuccessful)
+                        var result = _executor.ModifyPositionByPrice(position, newSL, position.TakeProfit);
+                        if (result == null)
+                        {
+                            // Skipped due to negligible change
+                        }
+                        else if (result.IsSuccessful)
                         {
                             track.TrailingStarted = true;
                         }
@@ -286,21 +257,18 @@ namespace RedWave.Common
             {
                 newSL = PriceUtils.NormalizePrice(_symbol.Ask + trailDistance, _symbol);
 
-                // Clamp by MinStopLossDistance to avoid invalid SL errors
-                double minAllowedSL = PriceUtils.NormalizePrice(_symbol.Ask + minDist, _symbol);
-                if (newSL < minAllowedSL)
-                {
-                    newSL = minAllowedSL;
-                }
-
                 if (position.StopLoss == null || newSL <= position.StopLoss - sensitivityDistance)
                 {
                     // Ensure we only move SL downwards
                     if (position.StopLoss == null || newSL < position.StopLoss)
                     {
                         _logger?.Debug($"TrailingManager: Trailing SELL #{position.Id}. New SL: {newSL}");
-                        var result = _robot.ModifyPosition(position, newSL, position.TakeProfit, ProtectionType.Absolute);
-                        if (result.IsSuccessful)
+                        var result = _executor.ModifyPositionByPrice(position, newSL, position.TakeProfit);
+                        if (result == null)
+                        {
+                            // Skipped due to negligible change
+                        }
+                        else if (result.IsSuccessful)
                         {
                             track.TrailingStarted = true;
                         }
