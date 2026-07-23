@@ -6,7 +6,7 @@ using cAlgo.API;
 namespace RedWave.Common.Smc
 {
     /// <summary>
-    /// Engine for detecting and managing Fair Value Gaps (3-candle price imbalances).
+    /// Engine for detecting and managing Fair Value Gaps (3-candle price imbalances) and Inversion FVGs (iFVG).
     /// Supports standalone usage or integration into SmcConfluenceMatrix.
     /// </summary>
     public class FvgEngine
@@ -18,6 +18,11 @@ namespace RedWave.Common.Smc
         /// Minimum gap width in pips required to register an FVG.
         /// </summary>
         public double MinGapPips { get; set; } = 1.0;
+
+        /// <summary>
+        /// Enable automatic conversion of invalidated FVGs into Inversion FVGs (iFVG).
+        /// </summary>
+        public bool EnableInversionFvg { get; set; } = true;
 
         /// <summary>
         /// Condition threshold to consider an FVG as Mitigated (Filled).
@@ -36,10 +41,16 @@ namespace RedWave.Common.Smc
         public IReadOnlyList<FairValueGap> AllFvgs => _fvgs.AsReadOnly();
 
         /// <summary>
-        /// Active (unfilled) FVGs.
+        /// Active (unfilled) FVGs including active Inversion FVGs.
         /// </summary>
         public IEnumerable<FairValueGap> ActiveFvgs => 
-            _fvgs.Where(f => f.Status == FvgStatus.Active || f.Status == FvgStatus.PartiallyFilled);
+            _fvgs.Where(f => f.Status == FvgStatus.Active || f.Status == FvgStatus.PartiallyFilled || f.Status == FvgStatus.Inversion);
+
+        /// <summary>
+        /// Inversion FVGs (iFVG) whose roles have flipped.
+        /// </summary>
+        public IEnumerable<FairValueGap> InversionFvgs =>
+            _fvgs.Where(f => f.IsInversion && f.Status == FvgStatus.Inversion);
 
         /// <summary>
         /// Scan bar at index and update status of existing FVGs.
@@ -83,7 +94,8 @@ namespace RedWave.Common.Smc
                         Status = FvgStatus.Active,
                         CreatedBarIndex = middleBarIndex,
                         CreatedTime = bars.OpenTimes[middleBarIndex],
-                        GapPips = gapPips
+                        GapPips = gapPips,
+                        IsInversion = false
                     });
                 }
             }
@@ -102,7 +114,8 @@ namespace RedWave.Common.Smc
                         Status = FvgStatus.Active,
                         CreatedBarIndex = middleBarIndex,
                         CreatedTime = bars.OpenTimes[middleBarIndex],
-                        GapPips = gapPips
+                        GapPips = gapPips,
+                        IsInversion = false
                     });
                 }
             }
@@ -122,16 +135,41 @@ namespace RedWave.Common.Smc
 
             foreach (var fvg in ActiveFvgs.ToList())
             {
+                // Handle Inversion FVG (iFVG) status checks
+                if (fvg.IsInversion)
+                {
+                    if (fvg.Direction == TradeType.Buy) // Bullish iFVG (Support for BUY)
+                    {
+                        if (close < fvg.BottomPrice) fvg.Status = FvgStatus.Invalidated;
+                        else if (low <= fvg.TopPrice) fvg.Status = FvgStatus.Mitigated;
+                    }
+                    else // Bearish iFVG (Resistance for SELL)
+                    {
+                        if (close > fvg.TopPrice) fvg.Status = FvgStatus.Invalidated;
+                        else if (high >= fvg.BottomPrice) fvg.Status = FvgStatus.Mitigated;
+                    }
+                    continue;
+                }
+
+                // Standard FVG status checks
                 if (fvg.Direction == TradeType.Buy)
                 {
-                    // Invalidated: Price closed below FVG bottom
+                    // Price closed below FVG bottom -> Invert role or Invalidate
                     if (close < fvg.BottomPrice)
                     {
-                        fvg.Status = FvgStatus.Invalidated;
+                        if (EnableInversionFvg)
+                        {
+                            fvg.Status = FvgStatus.Inversion;
+                            fvg.IsInversion = true;
+                            fvg.Direction = TradeType.Sell; // Flipped to Bearish iFVG (Resistance)
+                        }
+                        else
+                        {
+                            fvg.Status = FvgStatus.Invalidated;
+                        }
                     }
                     else
                     {
-                        // Check mitigation according to MitigationMode
                         bool isMitigated = false;
                         switch (MitigationMode)
                         {
@@ -158,14 +196,22 @@ namespace RedWave.Common.Smc
                 }
                 else // Bearish FVG
                 {
-                    // Invalidated: Price closed above FVG top
+                    // Price closed above FVG top -> Invert role or Invalidate
                     if (close > fvg.TopPrice)
                     {
-                        fvg.Status = FvgStatus.Invalidated;
+                        if (EnableInversionFvg)
+                        {
+                            fvg.Status = FvgStatus.Inversion;
+                            fvg.IsInversion = true;
+                            fvg.Direction = TradeType.Buy; // Flipped to Bullish iFVG (Support)
+                        }
+                        else
+                        {
+                            fvg.Status = FvgStatus.Invalidated;
+                        }
                     }
                     else
                     {
-                        // Check mitigation according to MitigationMode
                         bool isMitigated = false;
                         switch (MitigationMode)
                         {
@@ -195,12 +241,22 @@ namespace RedWave.Common.Smc
 
         public FairValueGap GetLatestBuyFvg()
         {
-            return ActiveFvgs.LastOrDefault(f => f.Direction == TradeType.Buy);
+            return ActiveFvgs.LastOrDefault(f => f.Direction == TradeType.Buy && !f.IsInversion);
         }
 
         public FairValueGap GetLatestSellFvg()
         {
-            return ActiveFvgs.LastOrDefault(f => f.Direction == TradeType.Sell);
+            return ActiveFvgs.LastOrDefault(f => f.Direction == TradeType.Sell && !f.IsInversion);
+        }
+
+        public FairValueGap GetLatestBuyInversionFvg()
+        {
+            return InversionFvgs.LastOrDefault(f => f.Direction == TradeType.Buy);
+        }
+
+        public FairValueGap GetLatestSellInversionFvg()
+        {
+            return InversionFvgs.LastOrDefault(f => f.Direction == TradeType.Sell);
         }
 
         public void Reset()

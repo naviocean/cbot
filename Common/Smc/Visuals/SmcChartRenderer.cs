@@ -10,10 +10,14 @@ namespace RedWave.Common.Smc
     {
         private readonly Chart _chart;
 
-        // FVG Colors: Cyan (Bullish) vs HotPink (Bearish)
+        // Standard FVG Colors: Cyan (Bullish) vs HotPink (Bearish)
         public Color BullishFvgColor { get; set; } = Color.FromArgb(60, 0, 238, 255);   // Semi-transparent Cyan
         public Color BearishFvgColor { get; set; } = Color.FromArgb(60, 255, 20, 147);  // Semi-transparent HotPink
         
+        // Inversion FVG (iFVG) Colors: LimeGreen (Bullish iFVG) vs Crimson (Bearish iFVG)
+        public Color BullishIfvgColor { get; set; } = Color.FromArgb(60, 50, 205, 50);   // Semi-transparent LimeGreen
+        public Color BearishIfvgColor { get; set; } = Color.FromArgb(60, 220, 20, 60);   // Semi-transparent Crimson
+
         // OB Colors: Royal Blue (Bullish) vs Dark Purple (Bearish)
         public Color BullishObColor { get; set; } = Color.FromArgb(70, 30, 144, 255);   // Semi-transparent Royal Blue
         public Color BearishObColor { get; set; } = Color.FromArgb(70, 153, 50, 204);  // Semi-transparent Dark Purple
@@ -49,8 +53,22 @@ namespace RedWave.Common.Smc
                 return;
             }
 
-            Color color = fvg.Direction == TradeType.Buy ? BullishFvgColor : BearishFvgColor;
-            Color textCol = fvg.Direction == TradeType.Buy ? Color.DarkCyan : Color.DeepPink;
+            Color color;
+            Color textCol;
+            string label;
+
+            if (fvg.IsInversion || fvg.Status == FvgStatus.Inversion)
+            {
+                color = fvg.Direction == TradeType.Buy ? BullishIfvgColor : BearishIfvgColor;
+                textCol = fvg.Direction == TradeType.Buy ? Color.LimeGreen : Color.Crimson;
+                label = fvg.Direction == TradeType.Buy ? $"iFVG (Buy) #{fvg.Id}" : $"iFVG (Sell) #{fvg.Id}";
+            }
+            else
+            {
+                color = fvg.Direction == TradeType.Buy ? BullishFvgColor : BearishFvgColor;
+                textCol = fvg.Direction == TradeType.Buy ? Color.DarkCyan : Color.DeepPink;
+                label = fvg.Direction == TradeType.Buy ? $"FVG (Buy) #{fvg.Id}" : $"FVG (Sell) #{fvg.Id}";
+            }
 
             var rect = _chart.DrawRectangle(
                 key,
@@ -62,7 +80,6 @@ namespace RedWave.Common.Smc
             );
             rect.IsFilled = true;
 
-            string label = fvg.Direction == TradeType.Buy ? $"FVG (Buy) #{fvg.Id}" : $"FVG (Sell) #{fvg.Id}";
             _chart.DrawText(key + "_TXT", label, fvg.CreatedBarIndex, fvg.TopPrice, textCol);
         }
 
