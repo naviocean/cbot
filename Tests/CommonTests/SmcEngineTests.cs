@@ -78,7 +78,7 @@ namespace CommonTests
         private static void TestOrderBlockEngine()
         {
             var obEngine = new OrderBlockEngine();
-            TestRunner.Assert(obEngine.ActiveOrderBlocks.Count == 0, "OrderBlockEngine initializes with 0 active OBs");
+            TestRunner.Assert(obEngine.ActiveOrderBlocks.Count() == 0, "OrderBlockEngine initializes with 0 active OBs");
         }
 
         private static void TestDealingRangeEngine()
