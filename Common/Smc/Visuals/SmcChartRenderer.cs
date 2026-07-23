@@ -1,3 +1,4 @@
+using System;
 using cAlgo.API;
 
 namespace RedWave.Common.Smc
@@ -21,6 +22,10 @@ namespace RedWave.Common.Smc
         // OB Colors: Royal Blue (Bullish) vs Dark Purple (Bearish)
         public Color BullishObColor { get; set; } = Color.FromArgb(70, 30, 144, 255);   // Semi-transparent Royal Blue
         public Color BearishObColor { get; set; } = Color.FromArgb(70, 153, 50, 204);  // Semi-transparent Dark Purple
+
+        // ICT Unicorn Setup Colors: Gold (Bullish Unicorn) vs HotPink/Violet (Bearish Unicorn)
+        public Color BullishUnicornColor { get; set; } = Color.FromArgb(90, 255, 215, 0);  // High-contrast Gold
+        public Color BearishUnicornColor { get; set; } = Color.FromArgb(90, 255, 105, 180); // High-contrast HotPink
 
         // Open Gap Colors (NWOG / NDOG)
         public Color NwogColor { get; set; } = Color.Aqua;
@@ -83,6 +88,35 @@ namespace RedWave.Common.Smc
             rect.IsFilled = true;
 
             _chart.DrawText(key + "_TXT", label, fvg.CreatedBarIndex, fvg.TopPrice, textCol);
+        }
+
+        public void DrawUnicorn(UnicornSetup unicorn, bool showVisual)
+        {
+            if (_chart == null || unicorn == null) return;
+            string key = $"SMC_UNICORN_{unicorn.Id}";
+
+            if (!showVisual || unicorn.BreakerBlock.IsMitigated || unicorn.Fvg.Status == FvgStatus.Mitigated)
+            {
+                _chart.RemoveObject(key);
+                _chart.RemoveObject(key + "_TXT");
+                return;
+            }
+
+            Color color = unicorn.Direction == TradeType.Buy ? BullishUnicornColor : BearishUnicornColor;
+            Color textCol = unicorn.Direction == TradeType.Buy ? Color.Gold : Color.DeepPink;
+
+            var rect = _chart.DrawRectangle(
+                key,
+                Math.Min(unicorn.BreakerBlock.BarIndex, unicorn.Fvg.CreatedBarIndex),
+                unicorn.OverlapTopPrice,
+                _chart.LastVisibleBarIndex + 5,
+                unicorn.OverlapBottomPrice,
+                color
+            );
+            rect.IsFilled = true;
+
+            string label = unicorn.Direction == TradeType.Buy ? $"🦄 Unicorn (Buy) #{unicorn.Id}" : $"🦄 Unicorn (Sell) #{unicorn.Id}";
+            _chart.DrawText(key + "_TXT", label, unicorn.Fvg.CreatedBarIndex, unicorn.OverlapTopPrice, textCol);
         }
 
         public void DrawOpenGap(OpenGapLevel gap, bool showVisual)

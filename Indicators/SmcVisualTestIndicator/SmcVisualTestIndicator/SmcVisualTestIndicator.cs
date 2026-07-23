@@ -29,6 +29,9 @@ namespace cAlgo.Indicators
         [Parameter("Enable NWOG / NDOG", Group = "1. Logic Engines", DefaultValue = true)]
         public bool EnableOpenGaps { get; set; }
 
+        [Parameter("Enable Unicorn Detector", Group = "1. Logic Engines", DefaultValue = true)]
+        public bool EnableUnicornLogic { get; set; }
+
         // ==========================================
         // PARAMETERS: ENGINE THRESHOLDS & BOUNDS
         // ==========================================
@@ -64,6 +67,9 @@ namespace cAlgo.Indicators
 
         [Parameter("Show Open Gap Lines", Group = "3. Visual Render", DefaultValue = true)]
         public bool ShowOpenGapVisuals { get; set; }
+
+        [Parameter("Show Unicorn Setup Visuals", Group = "3. Visual Render", DefaultValue = true)]
+        public bool ShowUnicornVisuals { get; set; }
 
         protected override void Initialize()
         {
@@ -113,8 +119,14 @@ namespace cAlgo.Indicators
                         _renderer.DrawOpenGap(gap, true);
                 }
 
+                if (ShowUnicornVisuals && EnableUnicornLogic)
+                {
+                    foreach (var unicorn in _smcMatrix.UnicornDetector.DetectedUnicorns)
+                        _renderer.DrawUnicorn(unicorn, true);
+                }
+
                 string zoneText = _smcMatrix.RangeEngine.GetZone(Symbol.Ask).ToString();
-                Chart.DrawStaticText("SMC_PANEL", $"[SMC Indicator] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count(f => !f.IsInversion)} | iFVGs: {_smcMatrix.FvgEngine.InversionFvgs.Count()} | NWOG Gaps: {_smcMatrix.NwogEngine.ActiveGaps.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Cyan);
+                Chart.DrawStaticText("SMC_PANEL", $"[SMC Indicator] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count(f => !f.IsInversion)} | iFVGs: {_smcMatrix.FvgEngine.InversionFvgs.Count()} | Unicorns: {_smcMatrix.UnicornDetector.DetectedUnicorns.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Cyan);
             }
         }
     }

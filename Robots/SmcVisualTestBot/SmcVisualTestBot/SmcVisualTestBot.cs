@@ -29,6 +29,9 @@ namespace cAlgo.Robots
         [Parameter("Enable NWOG Logic", Group = "1. Logic Switches", DefaultValue = true)]
         public bool EnableOpenGapLogic { get; set; }
 
+        [Parameter("Enable Unicorn Logic", Group = "1. Logic Switches", DefaultValue = true)]
+        public bool EnableUnicornLogic { get; set; }
+
         // ==========================================
         // PARAMETERS: ENGINE THRESHOLDS
         // ==========================================
@@ -64,6 +67,9 @@ namespace cAlgo.Robots
 
         [Parameter("Show Open Gap Lines", Group = "3. Visual Render", DefaultValue = true)]
         public bool ShowOpenGapVisuals { get; set; }
+
+        [Parameter("Show Unicorn Setup Visuals", Group = "3. Visual Render", DefaultValue = true)]
+        public bool ShowUnicornVisuals { get; set; }
 
         // ==========================================
         // PARAMETERS: TRADE EXECUTION
@@ -143,6 +149,12 @@ namespace cAlgo.Robots
             {
                 foreach (var gap in _smcMatrix.NwogEngine.ActiveGaps)
                     _renderer.DrawOpenGap(gap, true);
+            }
+
+            if (ShowUnicornVisuals && EnableUnicornLogic)
+            {
+                foreach (var unicorn in _smcMatrix.UnicornDetector.DetectedUnicorns)
+                    _renderer.DrawUnicorn(unicorn, true);
             }
 
             string zoneText = _smcMatrix.RangeEngine.GetZone(Symbol.Ask).ToString();
