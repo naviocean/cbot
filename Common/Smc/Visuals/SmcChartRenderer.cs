@@ -1,15 +1,18 @@
 using System;
+using System.Collections.Generic;
 using cAlgo.API;
 
 namespace RedWave.Common.Smc
 {
     /// <summary>
     /// Handles visual rendering of SMC/ICT elements on the cTrader Chart Canvas.
-    /// Supports automatic cleanup and performance toggle disabling.
+    /// Uses Frame-Tracking for 100% flicker-free rendering and instant stale object purging.
     /// </summary>
     public class SmcChartRenderer
     {
         private readonly Chart _chart;
+        private readonly HashSet<string> _renderedKeys = new HashSet<string>();
+        private readonly HashSet<string> _currentFrameKeys = new HashSet<string>();
 
         // Standard FVG Colors: Cyan (Bullish) vs HotPink (Bearish)
         public Color BullishFvgColor { get; set; } = Color.FromArgb(60, 0, 238, 255);   // Semi-transparent Cyan
@@ -37,7 +40,7 @@ namespace RedWave.Common.Smc
         public Color BullishChochColor { get; set; } = Color.Gold;
         public Color BearishChochColor { get; set; } = Color.DarkOrange;
 
-        // MSS Colors (Explicitly Defined)
+        // MSS Colors
         public Color BullishMssColor { get; set; } = Color.Yellow;
         public Color BearishMssColor { get; set; } = Color.Magenta;
 
@@ -46,19 +49,51 @@ namespace RedWave.Common.Smc
             _chart = chart;
         }
 
-        public void DrawFvg(FairValueGap fvg, bool showVisual, bool showIfvgVisual = true, bool autoClean = true)
+        public void BeginFrame()
+        {
+            _currentFrameKeys.Clear();
+        }
+
+        public void EndFrame()
         {
             if (_chart == null) return;
-            string key = $"SMC_FVG_{fvg.Id}";
+
+            var staleKeys = new List<string>();
+            foreach (var key in _renderedKeys)
+            {
+                if (!_currentFrameKeys.Contains(key))
+                {
+                    staleKeys.Add(key);
+                }
+            }
+
+            foreach (var staleKey in staleKeys)
+            {
+                _chart.RemoveObject(staleKey);
+                _renderedKeys.Remove(staleKey);
+            }
+        }
+
+        private void TrackKey(string key)
+        {
+            _currentFrameKeys.Add(key);
+            _renderedKeys.Add(key);
+        }
+
+        public void DrawFvg(FairValueGap fvg, bool showVisual, bool showIfvgVisual = true, bool autoClean = true)
+        {
+            if (_chart == null || fvg == null) return;
+            string key = $"SMC_FVG_{fvg.CreatedBarIndex}_{(int)fvg.Direction}";
 
             bool isIfvg = fvg.IsInversion || fvg.Status == FvgStatus.Inversion;
 
             if (!showVisual || (isIfvg && !showIfvgVisual) || (autoClean && (fvg.Status == FvgStatus.Mitigated || fvg.Status == FvgStatus.Invalidated)))
             {
-                _chart.RemoveObject(key);
-                _chart.RemoveObject(key + "_TXT");
                 return;
             }
+
+            TrackKey(key);
+            TrackKey(key + "_TXT");
 
             Color color;
             Color textCol;
@@ -93,14 +128,15 @@ namespace RedWave.Common.Smc
         public void DrawUnicorn(UnicornSetup unicorn, bool showVisual)
         {
             if (_chart == null || unicorn == null) return;
-            string key = $"SMC_UNICORN_{unicorn.Id}";
+            string key = $"SMC_UNICORN_{unicorn.BreakerBlock.BarIndex}_{unicorn.Fvg.CreatedBarIndex}";
 
             if (!showVisual || unicorn.BreakerBlock.IsMitigated || unicorn.Fvg.Status == FvgStatus.Mitigated)
             {
-                _chart.RemoveObject(key);
-                _chart.RemoveObject(key + "_TXT");
                 return;
             }
+
+            TrackKey(key);
+            TrackKey(key + "_TXT");
 
             Color color = unicorn.Direction == TradeType.Buy ? BullishUnicornColor : BearishUnicornColor;
             Color textCol = unicorn.Direction == TradeType.Buy ? Color.Gold : Color.DeepPink;
@@ -121,15 +157,16 @@ namespace RedWave.Common.Smc
 
         public void DrawOpenGap(OpenGapLevel gap, bool showVisual)
         {
-            if (_chart == null) return;
-            string key = $"SMC_GAP_{gap.Id}";
+            if (_chart == null || gap == null) return;
+            string key = $"SMC_GAP_{gap.BarIndex}_{(int)gap.Type}";
 
             if (!showVisual || gap.IsFilled)
             {
-                _chart.RemoveObject(key);
-                _chart.RemoveObject(key + "_TXT");
                 return;
             }
+
+            TrackKey(key);
+            TrackKey(key + "_TXT");
 
             Color color = gap.Type == OpenGapType.NWOG ? NwogColor : NdogColor;
             string label = $"{gap.Type} #{gap.Id}";
@@ -155,10 +192,11 @@ namespace RedWave.Common.Smc
 
             if (!showVisual)
             {
-                _chart.RemoveObject(key);
-                _chart.RemoveObject(key + "_TXT");
                 return;
             }
+
+            TrackKey(key);
+            TrackKey(key + "_TXT");
 
             Color color;
             if (evt.Type == BreakType.MSS)
@@ -192,15 +230,16 @@ namespace RedWave.Common.Smc
 
         public void DrawOrderBlock(OrderBlock ob, bool showVisual, bool autoClean = true)
         {
-            if (_chart == null) return;
-            string key = $"SMC_OB_{ob.Id}";
+            if (_chart == null || ob == null) return;
+            string key = $"SMC_OB_{ob.BarIndex}_{(int)ob.Type}";
 
             if (!showVisual || (autoClean && ob.IsMitigated))
             {
-                _chart.RemoveObject(key);
-                _chart.RemoveObject(key + "_TXT");
                 return;
             }
+
+            TrackKey(key);
+            TrackKey(key + "_TXT");
 
             Color color = ob.Direction == TradeType.Buy ? BullishObColor : BearishObColor;
             Color textCol = ob.Direction == TradeType.Buy ? Color.DodgerBlue : Color.MediumOrchid;

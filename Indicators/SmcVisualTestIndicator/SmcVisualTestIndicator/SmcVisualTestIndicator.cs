@@ -99,7 +99,9 @@ namespace cAlgo.Indicators
                     _smcMatrix.OnBar(Bars, i, Symbol.PipSize);
                 }
 
-                // Render FVG & iFVG (Passes toggles so unchecking cleans up immediately)
+                _renderer.BeginFrame();
+
+                // Render FVG & iFVG
                 foreach (var fvg in _smcMatrix.FvgEngine.AllFvgs)
                     _renderer.DrawFvg(fvg, EnableFvg && ShowFvgVisuals, ShowIfvgVisuals, autoClean: true);
 
@@ -118,6 +120,8 @@ namespace cAlgo.Indicators
                 // Render Unicorn Setups
                 foreach (var unicorn in _smcMatrix.UnicornDetector.DetectedUnicorns)
                     _renderer.DrawUnicorn(unicorn, EnableUnicornLogic && ShowUnicornVisuals);
+
+                _renderer.EndFrame();
 
                 string zoneText = _smcMatrix.RangeEngine.GetZone(Symbol.Ask).ToString();
                 Chart.DrawStaticText("SMC_PANEL", $"[SMC Indicator] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count(f => !f.IsInversion)} | iFVGs: {_smcMatrix.FvgEngine.InversionFvgs.Count()} | OBs: {_smcMatrix.ObEngine.ActiveOrderBlocks.Count()} | Unicorns: {_smcMatrix.UnicornDetector.DetectedUnicorns.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Cyan);

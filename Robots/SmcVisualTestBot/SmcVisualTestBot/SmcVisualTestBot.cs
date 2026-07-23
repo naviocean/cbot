@@ -95,7 +95,6 @@ namespace cAlgo.Robots
 
             _renderer = new SmcChartRenderer(Chart);
 
-            // Pre-fill historical bars on startup so bot has full SMC context & drawings immediately
             int startBar = Math.Max(0, Bars.Count - MaxBarsToScan);
             for (int i = startBar; i < Bars.Count; i++)
             {
@@ -107,13 +106,9 @@ namespace cAlgo.Robots
 
         protected override void OnBar()
         {
-            // 1. Process newest bar
             _smcMatrix.OnBar(Bars, Bars.Count - 1, Symbol.PipSize);
-
-            // 2. Render active visual shapes
             RenderVisuals();
 
-            // 3. Trade Execution Logic Test
             if (EnableTrading)
             {
                 if (_smcMatrix.IsValidBuySetup(Symbol.Ask, out var targetFvg, out var targetOb))
@@ -131,6 +126,8 @@ namespace cAlgo.Robots
 
         private void RenderVisuals()
         {
+            _renderer.BeginFrame();
+
             // Render FVG & iFVG
             foreach (var fvg in _smcMatrix.FvgEngine.AllFvgs)
                 _renderer.DrawFvg(fvg, EnableFvgLogic && ShowFvgVisuals, ShowIfvgVisuals, autoClean: true);
@@ -150,6 +147,8 @@ namespace cAlgo.Robots
             // Render Unicorn Setups
             foreach (var unicorn in _smcMatrix.UnicornDetector.DetectedUnicorns)
                 _renderer.DrawUnicorn(unicorn, EnableUnicornLogic && ShowUnicornVisuals);
+
+            _renderer.EndFrame();
 
             string zoneText = _smcMatrix.RangeEngine.GetZone(Symbol.Ask).ToString();
             Chart.DrawStaticText("SMC_BOT_PANEL", $"[SMC Bot] Zone: {zoneText} | Active FVGs: {_smcMatrix.FvgEngine.ActiveFvgs.Count(f => !f.IsInversion)} | iFVGs: {_smcMatrix.FvgEngine.InversionFvgs.Count()} | OBs: {_smcMatrix.ObEngine.ActiveOrderBlocks.Count()} | Unicorns: {_smcMatrix.UnicornDetector.DetectedUnicorns.Count()}", VerticalAlignment.Top, HorizontalAlignment.Left, Color.Gold);
