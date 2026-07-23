@@ -38,6 +38,9 @@ namespace cAlgo.Indicators
         [Parameter("Max Bars to Scan", Group = "2. Engine Settings", DefaultValue = 500, MinValue = 50, MaxValue = 5000)]
         public int MaxBarsToScan { get; set; }
 
+        [Parameter("Max Active OBs per Direction", Group = "2. Engine Settings", DefaultValue = 3, MinValue = 1, MaxValue = 20)]
+        public int MaxActiveOb { get; set; }
+
         [Parameter("FVG Mitigation Mode", Group = "2. Engine Settings", DefaultValue = FvgMitigationMode.TouchEdge)]
         public FvgMitigationMode MitigationMode { get; set; }
 
@@ -79,6 +82,7 @@ namespace cAlgo.Indicators
             _smcMatrix.FvgEngine.MitigationMode = MitigationMode;
             _smcMatrix.StructureEngine.PivotPeriod = PivotPeriod;
             _smcMatrix.StructureEngine.RequireBodyClose = RequireBodyBreak;
+            _smcMatrix.ObEngine.MaxActiveObPerDirection = MaxActiveOb;
 
             _renderer = new SmcChartRenderer(Chart);
         }
