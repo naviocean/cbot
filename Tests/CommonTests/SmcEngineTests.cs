@@ -26,6 +26,24 @@ namespace CommonTests
             TestBosEmittedOnce();
             TestMssNotFiredOnFirstBar();
             TestBreakerBlockMitigatedBelowBottom();
+
+            // Phase 2 Sprint 1 Tests
+            TestSessionEngineKillZones();
+            TestAsianRangeLocksAtLondon();
+            TestPdhPdlUpdatesOnNewDay();
+
+            // Phase 2 Sprint 2 Tests
+            TestMtfFilterBlocksCounterTrendSignal();
+            TestBprOverlapDetectedWhenFvgsIntersect();
+            TestBprNoDetectWhenNoOverlap();
+            TestBprMitigatedWhenPriceClosesBeyond();
+            TestPo3AccumulationDetectedInAsianSession();
+            TestPo3ManipulationOnJudasSwing();
+            TestPo3DistributionDirectionAfterManipulation();
+
+            // Phase 2 Sprint 3 Tests
+            TestDailyBiasScoring();
+            TestBiasFilterBlocksSellInBuyBiasDay();
         }
 
         private static void TestFvgDetection()
@@ -270,52 +288,334 @@ namespace CommonTests
             var now = DateTime.UtcNow;
             var bars = new MockBars(new List<MockBarData>
             {
-                new MockBarData { Time = now.AddMinutes(0),  Open = 100, High = 103.5, Low = 102.0, Close = 103.0 },
-                new MockBarData { Time = now.AddMinutes(5),  Open = 103, High = 103.2, Low = 102.5, Close = 102.0 },
-                new MockBarData { Time = now.AddMinutes(10), Open = 102, High = 98.0,  Low = 97.0,  Close = 97.5  },
-                new MockBarData { Time = now.AddMinutes(15), Open = 97,  High = 110.0, Low = 96.0,  Close = 107.0 },
-                new MockBarData { Time = now.AddMinutes(20), Open = 107, High = 110.0, Low = 101.0, Close = 103.0 },
-                new MockBarData { Time = now.AddMinutes(25), Open = 103, High = 104.0, Low = 98.0,  Close = 99.0  },
+                new MockBarData { Time = now.AddMinutes(0),  Open = 100, High = 101.0, Low = 99.0,  Close = 100.0 }, // bar 0 padding
+                new MockBarData { Time = now.AddMinutes(5),  Open = 100, High = 103.5, Low = 102.0, Close = 103.0 }, // bar 1 Bearish OB (Top 103, Bottom 100)
+                new MockBarData { Time = now.AddMinutes(10), Open = 103, High = 103.2, Low = 102.5, Close = 102.0 }, // bar 2 FVG created
+                new MockBarData { Time = now.AddMinutes(15), Open = 102, High = 98.0,  Low = 97.0,  Close = 97.5  }, // bar 3 FVG confirm
+                new MockBarData { Time = now.AddMinutes(20), Open = 97,  High = 110.0, Low = 96.0,  Close = 107.0 }, // bar 4 Close(107) > Top(103) -> Breaker
+                new MockBarData { Time = now.AddMinutes(25), Open = 107, High = 110.0, Low = 101.0, Close = 103.0 }, // bar 5 Low(101) > Bottom(100) -> Active
+                new MockBarData { Time = now.AddMinutes(30), Open = 103, High = 104.0, Low = 98.0,  Close = 99.0  }, // bar 6 Low(98) < Bottom(100) -> Mitigated
             });
 
-            // Mock Bearish FVG at CreatedBarIndex=1: TopPrice=firstLow=102, BottomPrice=thirdHigh=98
+            // Mock Bearish FVG at CreatedBarIndex=2
             var bearishFvg = new FairValueGap
             {
                 Id = 1, Direction = cAlgo.API.TradeType.Sell,
                 TopPrice = 102.0, BottomPrice = 98.0,
-                Status = FvgStatus.Active, CreatedBarIndex = 1, IsInversion = false
+                Status = FvgStatus.Active, CreatedBarIndex = 2, IsInversion = false
             };
-            // Mock StructureEvent confirming the Bearish move at bar[2]
+            // Mock StructureEvent confirming the Bearish move at bar[3]
             var sellEvent = new StructureEvent
             {
                 Direction = cAlgo.API.TradeType.Sell,
-                TriggerBarIndex = 2,
+                TriggerBarIndex = 3,
                 Type = BreakType.BOS
             };
 
             var noFvgs = System.Linq.Enumerable.Empty<FairValueGap>();
             var noEvents = System.Linq.Enumerable.Empty<StructureEvent>();
 
-            // Step 1: bar[2] — detect Bearish OB at barIndex=0 (FVG + StructureEvent match)
-            engine.Update(bars, new[] { bearishFvg }, new[] { sellEvent }, 2);
+            // Step 1: bar[3] — detect Bearish OB at barIndex=1 (FVG + StructureEvent match)
+            engine.Update(bars, new[] { bearishFvg }, new[] { sellEvent }, 3);
             TestRunner.Assert(engine.AllOrderBlocks.Count == 1, "OrderBlockEngine detects 1 Bearish OB after FVG+StructureEvent confirmation");
             TestRunner.Assert(engine.BreakerBlocks.Count() == 0, "No BreakerBlocks yet — OB still standard Bearish OB");
 
-            // Step 2: bar[3] — Close(107) > OB.TopPrice(103) → EnableBreakerBlocks → Bullish BreakerBlock
-            engine.Update(bars, noFvgs, noEvents, 3);
+            // Step 2: bar[4] — Close(107) > OB.TopPrice(103) → EnableBreakerBlocks → Bullish BreakerBlock
+            engine.Update(bars, noFvgs, noEvents, 4);
             TestRunner.Assert(engine.BreakerBlocks.Count() == 1, "Bearish OB converts to Bullish BreakerBlock when price closes above TopPrice");
             var breaker = engine.BreakerBlocks.First();
             TestRunner.Assert(breaker.Direction == cAlgo.API.TradeType.Buy, "Converted BreakerBlock direction is Buy (acts as Support zone)");
             TestRunner.Assert(breaker.BottomPrice == 100.0, "BreakerBlock BottomPrice is 100.0 (body lower bound of original OB)");
 
-            // Step 3: bar[4] — Low(101) > BottomPrice(100) → Bullish BreakerBlock still ACTIVE
-            engine.Update(bars, noFvgs, noEvents, 4);
+            // Step 3: bar[5] — Low(101) > BottomPrice(100) → Bullish BreakerBlock still ACTIVE
+            engine.Update(bars, noFvgs, noEvents, 5);
             TestRunner.Assert(!breaker.IsMitigated, "Bullish BreakerBlock remains active when Low(101) > BottomPrice(100) — guard pre-condition");
 
-            // Step 4: bar[5] — Low(98) < BottomPrice(100) → MITIGATED (BUG-OBE-01 regression guard)
-            engine.Update(bars, noFvgs, noEvents, 5);
+            // Step 4: bar[6] — Low(98) < BottomPrice(100) → MITIGATED (BUG-OBE-01 regression guard)
+            engine.Update(bars, noFvgs, noEvents, 6);
             TestRunner.Assert(breaker.IsMitigated, "Bullish BreakerBlock is mitigated when Low(98) < BottomPrice(100) — BUG-OBE-01 regression guard");
             TestRunner.Assert(engine.BreakerBlocks.Count() == 0, "BreakerBlocks collection is empty after mitigation");
+        }
+
+        private static void TestSessionEngineKillZones()
+        {
+            var session = new SessionEngine();
+            var tLondon = new DateTime(2026, 7, 23, 3, 0, 0, DateTimeKind.Utc);
+            session.Update(tLondon, 105.0, 100.0);
+            TestRunner.Assert(session.CurrentSession == SessionType.London, "SessionEngine detects London Session at 03:00 UTC");
+            TestRunner.Assert(session.ActiveKillZone == KillZone.LOKZ, "SessionEngine detects LOKZ KillZone at 03:00 UTC");
+            TestRunner.Assert(session.IsInKillZone == true, "SessionEngine IsInKillZone is true during LOKZ");
+
+            var tNyAm = new DateTime(2026, 7, 23, 8, 30, 0, DateTimeKind.Utc);
+            session.Update(tNyAm, 105.0, 100.0);
+            TestRunner.Assert(session.CurrentSession == SessionType.NewYork, "SessionEngine detects NY Session at 08:30 UTC");
+            TestRunner.Assert(session.ActiveKillZone == KillZone.NYAM, "SessionEngine detects NYAM KillZone at 08:30 UTC");
+
+            var tSb1 = new DateTime(2026, 7, 23, 10, 30, 0, DateTimeKind.Utc);
+            session.Update(tSb1, 105.0, 100.0);
+            TestRunner.Assert(session.ActiveKillZone == KillZone.SilverBullet1, "SessionEngine detects SilverBullet1 at 10:30 UTC");
+            TestRunner.Assert(session.IsInSilverBullet == true, "SessionEngine IsInSilverBullet is true during SB1");
+        }
+
+        private static void TestAsianRangeLocksAtLondon()
+        {
+            var session = new SessionEngine();
+            var tAsian1 = new DateTime(2026, 7, 23, 21, 0, 0, DateTimeKind.Utc);
+            session.Update(tAsian1, 110.0, 100.0);
+
+            var tAsian2 = new DateTime(2026, 7, 23, 22, 0, 0, DateTimeKind.Utc);
+            session.Update(tAsian2, 115.0, 95.0);
+
+            TestRunner.Assert(session.AsianHigh == 115.0 && session.AsianLow == 95.0, "Asian Range updates high=115 and low=95 during Asian session");
+            TestRunner.Assert(session.AsianRangeLocked == false, "Asian Range is not locked during Asian session");
+
+            var tLondon = new DateTime(2026, 7, 24, 2, 0, 0, DateTimeKind.Utc);
+            session.Update(tLondon, 120.0, 90.0);
+
+            TestRunner.Assert(session.AsianRangeLocked == true, "Asian Range locks upon transition to London session");
+            TestRunner.Assert(session.AsianHigh == 115.0 && session.AsianLow == 95.0, "Asian Range High/Low frozen after locking");
+        }
+
+        private static void TestPdhPdlUpdatesOnNewDay()
+        {
+            var liquidity = new LiquidityEngine();
+            var day1Time = new DateTime(2026, 7, 22, 10, 0, 0, DateTimeKind.Utc);
+            var barsDay1 = new MockBars(new List<MockBarData>
+            {
+                new MockBarData { Time = day1Time, Open = 100, High = 105.0, Low = 95.0, Close = 102.0 },
+                new MockBarData { Time = day1Time.AddHours(2), Open = 102, High = 110.0, Low = 94.0, Close = 108.0 },
+                new MockBarData { Time = day1Time.AddHours(4), Open = 108, High = 109.0, Low = 98.0, Close = 106.0 },
+                new MockBarData { Time = day1Time.AddHours(6), Open = 106, High = 107.0, Low = 97.0, Close = 105.0 },
+                new MockBarData { Time = day1Time.AddHours(8), Open = 105, High = 108.0, Low = 96.0, Close = 104.0 }
+            });
+
+            for (int i = 0; i < barsDay1.Count; i++)
+            {
+                liquidity.Update(barsDay1, i, 0.1, barsDay1.OpenTimes[i]);
+            }
+
+            var day2Time = new DateTime(2026, 7, 23, 1, 0, 0, DateTimeKind.Utc);
+            var barsDay2 = new MockBars(new List<MockBarData>
+            {
+                new MockBarData { Time = day2Time, Open = 104, High = 106.0, Low = 103.0, Close = 105.0 },
+                new MockBarData { Time = day2Time.AddHours(2), Open = 105, High = 107.0, Low = 102.0, Close = 104.0 },
+                new MockBarData { Time = day2Time.AddHours(4), Open = 104, High = 108.0, Low = 101.0, Close = 106.0 },
+                new MockBarData { Time = day2Time.AddHours(6), Open = 106, High = 109.0, Low = 100.0, Close = 107.0 },
+                new MockBarData { Time = day2Time.AddHours(8), Open = 107, High = 110.0, Low = 99.0, Close = 108.0 }
+            });
+
+            for (int i = 0; i < barsDay2.Count; i++)
+            {
+                liquidity.Update(barsDay2, i, 0.1, barsDay2.OpenTimes[i]);
+            }
+
+            TestRunner.Assert(liquidity.PreviousDayHigh == 110.0, "LiquidityEngine updates PreviousDayHigh = 110.0 on new day rollover");
+            TestRunner.Assert(liquidity.PreviousDayLow == 94.0, "LiquidityEngine updates PreviousDayLow = 94.0 on new day rollover");
+        }
+
+        private static void TestMtfFilterBlocksCounterTrendSignal()
+        {
+            var matrix = new SmcConfluenceMatrix();
+            matrix.EnableMtfFilter = true;
+            matrix.HTFBias = new MtfBias
+            {
+                IsValid = true,
+                Direction = cAlgo.API.TradeType.Sell
+            };
+
+            // Set Range to Discount and Structure to Buy
+            matrix.RangeEngine.Update(new PivotPoint { Price = 120.0 }, new PivotPoint { Price = 100.0 });
+            // Structure LastDirection Buy set by creating a Buy FVG/OB
+            var bars = new MockBars(new List<MockBarData>
+            {
+                new MockBarData { Time = DateTime.UtcNow, Open = 100, High = 101, Low = 99, Close = 100.5 },
+                new MockBarData { Time = DateTime.UtcNow.AddMinutes(5), Open = 100.5, High = 107, Low = 100, Close = 106.5 },
+                new MockBarData { Time = DateTime.UtcNow.AddMinutes(10), Open = 106.5, High = 109, Low = 104, Close = 108.0 }
+            });
+            matrix.OnBar(bars, 2, 0.1);
+
+            bool isBuyValid = matrix.IsValidBuySetup(105.0, out _, out _);
+            TestRunner.Assert(!isBuyValid, "SmcConfluenceMatrix MTF filter blocks counter-trend Buy setup when HTFBias is Sell");
+        }
+
+        private static void TestBprOverlapDetectedWhenFvgsIntersect()
+        {
+            var bprEngine = new BprEngine { MinOverlapPips = 1.0 };
+            var bullFvg = new FairValueGap
+            {
+                Id = 1, Direction = cAlgo.API.TradeType.Buy,
+                TopPrice = 107.0, BottomPrice = 102.0, Status = FvgStatus.Active, CreatedBarIndex = 1
+            };
+            var bearFvg = new FairValueGap
+            {
+                Id = 2, Direction = cAlgo.API.TradeType.Sell,
+                TopPrice = 109.0, BottomPrice = 104.0, Status = FvgStatus.Active, CreatedBarIndex = 2
+            };
+
+            bprEngine.Update(new[] { bullFvg, bearFvg }, 0.1);
+
+            TestRunner.Assert(bprEngine.ActiveBprs.Count == 1, "BprEngine detects 1 active Balanced Price Range overlap");
+            var bpr = bprEngine.ActiveBprs.First();
+            TestRunner.Assert(bpr.OverlapTopPrice == 107.0 && bpr.OverlapBottomPrice == 104.0, "BprEngine overlap bounds math Top=107.0, Bottom=104.0");
+            TestRunner.Assert(bpr.Direction == cAlgo.API.TradeType.Buy, "BPR direction is Buy when Bullish FVG formed before Bearish FVG");
+        }
+
+        private static void TestBprNoDetectWhenNoOverlap()
+        {
+            var bprEngine = new BprEngine { MinOverlapPips = 1.0 };
+            var bullFvg = new FairValueGap
+            {
+                Id = 1, Direction = cAlgo.API.TradeType.Buy,
+                TopPrice = 102.0, BottomPrice = 100.0, Status = FvgStatus.Active, CreatedBarIndex = 1
+            };
+            var bearFvg = new FairValueGap
+            {
+                Id = 2, Direction = cAlgo.API.TradeType.Sell,
+                TopPrice = 109.0, BottomPrice = 105.0, Status = FvgStatus.Active, CreatedBarIndex = 2
+            };
+
+            bprEngine.Update(new[] { bullFvg, bearFvg }, 0.1);
+            TestRunner.Assert(bprEngine.ActiveBprs.Count == 0, "BprEngine detects 0 BPRs when FVGs do not overlap");
+        }
+
+        private static void TestBprMitigatedWhenPriceClosesBeyond()
+        {
+            var bprEngine = new BprEngine { MinOverlapPips = 1.0 };
+            var bullFvg = new FairValueGap
+            {
+                Id = 1, Direction = cAlgo.API.TradeType.Buy,
+                TopPrice = 107.0, BottomPrice = 104.0, Status = FvgStatus.Active, CreatedBarIndex = 1
+            };
+            var bearFvg = new FairValueGap
+            {
+                Id = 2, Direction = cAlgo.API.TradeType.Sell,
+                TopPrice = 109.0, BottomPrice = 105.0, Status = FvgStatus.Active, CreatedBarIndex = 2
+            };
+
+            bprEngine.Update(new[] { bullFvg, bearFvg }, 0.1);
+            var bpr = bprEngine.ActiveBprs.First();
+            TestRunner.Assert(!bpr.IsMitigated, "BPR Buy is initially unmitigated");
+
+            // Close below OverlapBottomPrice 105.0 -> Mitigated
+            bprEngine.Update(new[] { bullFvg, bearFvg }, 0.1, recentClose: 103.0);
+            TestRunner.Assert(bpr.IsMitigated, "BPR Buy is mitigated when recent close falls below OverlapBottomPrice");
+        }
+
+        private static void TestPo3AccumulationDetectedInAsianSession()
+        {
+            var po3 = new PowerOfThreeEngine { MinAsianRangePips = 5.0 };
+            var session = new SessionEngine();
+            var liquidity = new LiquidityEngine();
+
+            var tAsian = new DateTime(2026, 7, 23, 21, 0, 0, DateTimeKind.Utc);
+            session.Update(tAsian, 110.0, 100.0); // Range 10 pips >= 5.0
+
+            po3.Update(session, liquidity, 0.1, tAsian);
+            TestRunner.Assert(po3.CurrentPhase == Po3Phase.Accumulation, "PowerOfThreeEngine enters Accumulation phase during Asian session");
+        }
+
+        private static void TestPo3ManipulationOnJudasSwing()
+        {
+            var po3 = new PowerOfThreeEngine { MinAsianRangePips = 5.0 };
+            var session = new SessionEngine();
+            var liquidity = new LiquidityEngine();
+
+            var tAsian = new DateTime(2026, 7, 23, 21, 0, 0, DateTimeKind.Utc);
+            session.Update(tAsian, 110.0, 100.0);
+            po3.Update(session, liquidity, 0.1, tAsian);
+
+            // Transition to London
+            var tLondon = new DateTime(2026, 7, 24, 3, 0, 0, DateTimeKind.Utc);
+            session.Update(tLondon, 110.0, 98.0); // Dips below AsianLow 100.0
+            liquidity.SetSessionLevels(session.AsianHigh, session.AsianLow);
+
+            var bars = new MockBars(new List<MockBarData>
+            {
+                new MockBarData { Time = tAsian, Open = 105, High = 106, Low = 104, Close = 105 },
+                new MockBarData { Time = tAsian.AddMinutes(5), Open = 105, High = 106, Low = 104, Close = 105 },
+                new MockBarData { Time = tAsian.AddMinutes(10), Open = 105, High = 106, Low = 104, Close = 105 },
+                new MockBarData { Time = tAsian.AddMinutes(15), Open = 105, High = 106, Low = 104, Close = 105 },
+                new MockBarData { Time = tLondon, Open = 102, High = 103, Low = 98.0, Close = 101.0 } // sweeps AsianLow 100.0 and closes back inside
+            });
+
+            // Update liquidity to register sweep
+            liquidity.AddPool(LiquidityType.AsianLow, 100.0, 0, tAsian);
+            liquidity.Update(bars, 4, 0.1, tLondon);
+
+            po3.Update(session, liquidity, 0.1, tLondon);
+            TestRunner.Assert(po3.CurrentPhase == Po3Phase.Manipulation, "PowerOfThreeEngine enters Manipulation phase on Asian Low Judas Swing sweep");
+            TestRunner.Assert(po3.DistributionDirection == cAlgo.API.TradeType.Buy, "PowerOfThreeEngine sets DistributionDirection to Buy after Asian Low sweep");
+        }
+
+        private static void TestPo3DistributionDirectionAfterManipulation()
+        {
+            var po3 = new PowerOfThreeEngine { MinAsianRangePips = 5.0 };
+            var session = new SessionEngine();
+            var liquidity = new LiquidityEngine();
+
+            var tAsian = new DateTime(2026, 7, 23, 21, 0, 0, DateTimeKind.Utc);
+            session.Update(tAsian, 110.0, 100.0);
+            po3.Update(session, liquidity, 0.1, tAsian);
+
+            var tLondon = new DateTime(2026, 7, 24, 3, 0, 0, DateTimeKind.Utc);
+            session.Update(tLondon, 110.0, 98.0);
+            liquidity.AddPool(LiquidityType.AsianLow, 100.0, 0, tAsian);
+
+            var bars = new MockBars(new List<MockBarData>
+            {
+                new MockBarData { Time = tAsian, Open = 105, High = 106, Low = 104, Close = 105 },
+                new MockBarData { Time = tAsian.AddMinutes(5), Open = 105, High = 106, Low = 104, Close = 105 },
+                new MockBarData { Time = tAsian.AddMinutes(10), Open = 105, High = 106, Low = 104, Close = 105 },
+                new MockBarData { Time = tAsian.AddMinutes(15), Open = 105, High = 106, Low = 104, Close = 105 },
+                new MockBarData { Time = tLondon, Open = 102, High = 103, Low = 98.0, Close = 101.0 }
+            });
+            liquidity.Update(bars, 4, 0.1, tLondon);
+
+            po3.Update(session, liquidity, 0.1, tLondon); // Manipulation phase
+            po3.Update(session, liquidity, 0.1, tLondon.AddMinutes(15)); // Distribution phase
+
+            TestRunner.Assert(po3.CurrentPhase == Po3Phase.Distribution, "PowerOfThreeEngine reaches Distribution phase");
+            TestRunner.Assert(po3.IsSetupValid == true, "PowerOfThreeEngine IsSetupValid is true during Distribution phase");
+        }
+
+        private static void TestDailyBiasScoring()
+        {
+            var biasEngine = new DailyBiasEngine();
+            var htfBias = new MtfBias { IsValid = true, Direction = cAlgo.API.TradeType.Buy };
+            var range = new DealingRangeEngine();
+            range.Update(new PivotPoint { Price = 120.0 }, new PivotPoint { Price = 100.0 }); // Eq = 110.0
+            var liquidity = new LiquidityEngine();
+            var session = new SessionEngine();
+            var tAsian = new DateTime(2026, 7, 23, 21, 0, 0, DateTimeKind.Utc);
+            session.Update(tAsian, 110.0, 90.0); // AsianMidpoint = 100.0
+
+            // Price 105.0 is in Discount (< 110.0) and > AsianMidpoint (100.0)
+            // HTFBias Buy (+0.25), Discount (+0.25), PDL intact (+0.25), Price > AsianMid (+0.25) -> Total Buy Score = 1.0
+            biasEngine.Update(htfBias, range, liquidity, session, 105.0, tAsian);
+
+            TestRunner.Assert(biasEngine.TodayBias == BiasType.BuyBias, "DailyBiasEngine calculates BuyBias when 4/4 conditions match");
+            TestRunner.Assert(biasEngine.BiasScore == 1.0, "DailyBiasEngine calculates 1.0 BiasScore for perfect Buy bias");
+        }
+
+        private static void TestBiasFilterBlocksSellInBuyBiasDay()
+        {
+            var matrix = new SmcConfluenceMatrix();
+            matrix.EnableBiasFilter = true;
+            matrix.HTFBias = new MtfBias { IsValid = true, Direction = cAlgo.API.TradeType.Buy };
+            matrix.RangeEngine.Update(new PivotPoint { Price = 120.0 }, new PivotPoint { Price = 100.0 });
+
+            var tAsian = new DateTime(2026, 7, 23, 21, 0, 0, DateTimeKind.Utc);
+            matrix.SessionEngine.Update(tAsian, 110.0, 90.0);
+
+            // Update matrix on bar to calculate BuyBias
+            var bars = new MockBars(new List<MockBarData>
+            {
+                new MockBarData { Time = tAsian, Open = 105, High = 106, Low = 104, Close = 105 }
+            });
+            matrix.OnBar(bars, 0, 0.1);
+
+            bool isSellValid = matrix.IsValidSellSetup(115.0, out _, out _);
+            TestRunner.Assert(!isSellValid, "SmcConfluenceMatrix Bias filter blocks Sell setup on a BuyBias day");
         }
 
     }

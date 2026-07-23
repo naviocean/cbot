@@ -16,10 +16,31 @@ namespace RedWave.Common.Smc
 
         public double EqualTolerancePips { get; set; } = 2.0;
 
+        public double PreviousDayHigh { get; private set; }
+        public double PreviousDayLow { get; private set; }
+        public double PreviousWeekHigh { get; private set; }
+        public double PreviousWeekLow { get; private set; }
+        public double AsianSessionHigh { get; private set; }
+        public double AsianSessionLow { get; private set; }
+
+        private DateTime _lastBarDate = DateTime.MinValue;
+        private double _currentDayHigh = 0;
+        private double _currentDayLow = double.MaxValue;
+
+        private int _lastWeekNumber = -1;
+        private double _currentWeekHigh = 0;
+        private double _currentWeekLow = double.MaxValue;
+
         public IReadOnlyList<LiquidityPool> ActivePools => _pools.Where(p => !p.IsSwept).ToList().AsReadOnly();
         public IReadOnlyList<SweepEvent> Sweeps => _sweeps.AsReadOnly();
 
-        public void Update(Bars bars, int currBarIndex = -1, double pipSize = 0.0001)
+        public void SetSessionLevels(double asianHigh, double asianLow)
+        {
+            AsianSessionHigh = asianHigh;
+            AsianSessionLow = asianLow;
+        }
+
+        public void Update(Bars bars, int currBarIndex = -1, double pipSize = 0.0001, DateTime? barTime = null)
         {
             if (bars == null || bars.Count < 5)
                 return;
@@ -27,17 +48,54 @@ namespace RedWave.Common.Smc
             if (currBarIndex < 0)
                 currBarIndex = bars.Count - 1;
 
-            if (currBarIndex < 4 || currBarIndex >= bars.Count)
+            if (currBarIndex < 0 || currBarIndex >= bars.Count)
                 return;
 
             double high = bars.HighPrices[currBarIndex];
             double low = bars.LowPrices[currBarIndex];
             double close = bars.ClosePrices[currBarIndex];
+            DateTime bTime = barTime ?? bars.OpenTimes[currBarIndex];
 
-            // 1. Check if current bar sweeps any active Liquidity Pool
+            // 1. Roll Daily PDH/PDL & Weekly PWH/PWL
+            if (_lastBarDate != DateTime.MinValue && bTime.Date != _lastBarDate)
+            {
+                PreviousDayHigh = _currentDayHigh;
+                PreviousDayLow = _currentDayLow;
+                _currentDayHigh = high;
+                _currentDayLow = low;
+                _lastBarDate = bTime.Date;
+
+                if (PreviousDayHigh > 0) AddPool(LiquidityType.PDH, PreviousDayHigh, currBarIndex, bTime);
+                if (PreviousDayLow > 0 && PreviousDayLow < double.MaxValue) AddPool(LiquidityType.PDL, PreviousDayLow, currBarIndex, bTime);
+            }
+            else
+            {
+                if (_lastBarDate == DateTime.MinValue) _lastBarDate = bTime.Date;
+                if (high > _currentDayHigh) _currentDayHigh = high;
+                if (low < _currentDayLow) _currentDayLow = low;
+            }
+
+            int currWeek = System.Globalization.CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(
+                bTime, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+            if (_lastWeekNumber != -1 && currWeek != _lastWeekNumber)
+            {
+                PreviousWeekHigh = _currentWeekHigh;
+                PreviousWeekLow = _currentWeekLow;
+                _currentWeekHigh = high;
+                _currentWeekLow = low;
+                _lastWeekNumber = currWeek;
+            }
+            else
+            {
+                if (_lastWeekNumber == -1) _lastWeekNumber = currWeek;
+                if (high > _currentWeekHigh) _currentWeekHigh = high;
+                if (low < _currentWeekLow) _currentWeekLow = low;
+            }
+
+            // 2. Check if current bar sweeps any active Liquidity Pool
             foreach (var pool in ActivePools)
             {
-                if (pool.Type == LiquidityType.BSL || pool.Type == LiquidityType.EQH || pool.Type == LiquidityType.AsianHigh)
+                if (pool.Type == LiquidityType.BSL || pool.Type == LiquidityType.EQH || pool.Type == LiquidityType.AsianHigh || pool.Type == LiquidityType.PDH)
                 {
                     if (high > pool.PriceLevel)
                     {
@@ -49,12 +107,12 @@ namespace RedWave.Common.Smc
                             Pool = pool,
                             SweptExtremumPrice = high,
                             SweepBarIndex = currBarIndex,
-                            SweepTime = bars.OpenTimes[currBarIndex],
+                            SweepTime = bTime,
                             ClosedBackInside = closedBackInside
                         });
                     }
                 }
-                else if (pool.Type == LiquidityType.SSL || pool.Type == LiquidityType.EQL || pool.Type == LiquidityType.AsianLow)
+                else if (pool.Type == LiquidityType.SSL || pool.Type == LiquidityType.EQL || pool.Type == LiquidityType.AsianLow || pool.Type == LiquidityType.PDL)
                 {
                     if (low < pool.PriceLevel)
                     {
@@ -66,30 +124,33 @@ namespace RedWave.Common.Smc
                             Pool = pool,
                             SweptExtremumPrice = low,
                             SweepBarIndex = currBarIndex,
-                            SweepTime = bars.OpenTimes[currBarIndex],
+                            SweepTime = bTime,
                             ClosedBackInside = closedBackInside
                         });
                     }
                 }
             }
 
-            // 2. Automatically register new Swing High/Low Liquidity Pools from recent bar
-            int checkIndex = currBarIndex - 2;
-            if (checkIndex > 2)
+            // 3. Automatically register new Swing High/Low Liquidity Pools from recent bar
+            if (currBarIndex >= 4)
             {
-                double candHigh = bars.HighPrices[checkIndex];
-                double candLow = bars.LowPrices[checkIndex];
-
-                if (candHigh > bars.HighPrices[checkIndex - 1] && candHigh > bars.HighPrices[checkIndex - 2] &&
-                    candHigh > bars.HighPrices[checkIndex + 1] && candHigh > bars.HighPrices[checkIndex + 2])
+                int checkIndex = currBarIndex - 2;
+                if (checkIndex > 2)
                 {
-                    AddPool(LiquidityType.BSL, candHigh, checkIndex, bars.OpenTimes[checkIndex]);
-                }
+                    double candHigh = bars.HighPrices[checkIndex];
+                    double candLow = bars.LowPrices[checkIndex];
 
-                if (candLow < bars.LowPrices[checkIndex - 1] && candLow < bars.LowPrices[checkIndex - 2] &&
-                    candLow < bars.LowPrices[checkIndex + 1] && candLow < bars.LowPrices[checkIndex + 2])
-                {
-                    AddPool(LiquidityType.SSL, candLow, checkIndex, bars.OpenTimes[checkIndex]);
+                    if (candHigh > bars.HighPrices[checkIndex - 1] && candHigh > bars.HighPrices[checkIndex - 2] &&
+                        candHigh > bars.HighPrices[checkIndex + 1] && candHigh > bars.HighPrices[checkIndex + 2])
+                    {
+                        AddPool(LiquidityType.BSL, candHigh, checkIndex, bars.OpenTimes[checkIndex]);
+                    }
+
+                    if (candLow < bars.LowPrices[checkIndex - 1] && candLow < bars.LowPrices[checkIndex - 2] &&
+                        candLow < bars.LowPrices[checkIndex + 1] && candLow < bars.LowPrices[checkIndex + 2])
+                    {
+                        AddPool(LiquidityType.SSL, candLow, checkIndex, bars.OpenTimes[checkIndex]);
+                    }
                 }
             }
         }
@@ -121,6 +182,18 @@ namespace RedWave.Common.Smc
             _pools.Clear();
             _sweeps.Clear();
             _idCounter = 0;
+            PreviousDayHigh = 0;
+            PreviousDayLow = 0;
+            PreviousWeekHigh = 0;
+            PreviousWeekLow = 0;
+            AsianSessionHigh = 0;
+            AsianSessionLow = 0;
+            _lastBarDate = DateTime.MinValue;
+            _currentDayHigh = 0;
+            _currentDayLow = double.MaxValue;
+            _lastWeekNumber = -1;
+            _currentWeekHigh = 0;
+            _currentWeekLow = double.MaxValue;
         }
     }
 }

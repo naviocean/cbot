@@ -114,4 +114,32 @@ namespace RedWave.Common.Smc
         public DateTime SweepTime { get; set; }
         public bool ClosedBackInside { get; set; } // True = Rejection wick sweep
     }
+
+    /// <summary>
+    /// Higher Timeframe (HTF) Bias Context.
+    /// </summary>
+    public class MtfBias
+    {
+        public bool IsValid { get; set; }
+        public TradeType Direction { get; set; }
+        public BreakType LastHTFBreak { get; set; }
+        public MarketZone HTFZone { get; set; }
+        public DateTime UpdatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// Balanced Price Range (BPR) — Overlap between Bullish and Bearish FVGs.
+    /// </summary>
+    public class BalancedPriceRange
+    {
+        public int Id { get; set; }
+        public TradeType Direction { get; set; } // Buy = Support (Bullish first), Sell = Resistance (Bearish first)
+        public FairValueGap BullishFvg { get; set; }
+        public FairValueGap BearishFvg { get; set; }
+        public double OverlapTopPrice { get; set; }
+        public double OverlapBottomPrice { get; set; }
+        public double MidPrice => (OverlapTopPrice + OverlapBottomPrice) / 2.0;
+        public bool IsMitigated { get; set; }
+        public int DetectedBarIndex { get; set; }
+    }
 }

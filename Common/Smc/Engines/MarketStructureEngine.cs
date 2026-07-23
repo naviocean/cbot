@@ -23,6 +23,7 @@ namespace RedWave.Common.Smc
         public PivotPoint CurrentSwingLow { get; private set; }
         public BreakType LastBreakType { get; private set; }
         public TradeType LastDirection => _lastDirection ?? TradeType.Buy;
+        public bool HasDirection => _lastDirection.HasValue;
         public StructureEvent LatestEvent => _events.LastOrDefault();
 
         public IReadOnlyList<PivotPoint> Pivots => _pivots.AsReadOnly();

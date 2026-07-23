@@ -85,4 +85,50 @@ namespace RedWave.Common.Smc
         Discount,   // Below 50% Equilibrium (Buy Zone)
         Equilibrium // 50% Equilibrium Line
     }
+
+    /// <summary>
+    /// Trading Session Type (ICT Sessions).
+    /// </summary>
+    public enum SessionType
+    {
+        Asian,
+        London,
+        NewYork,
+        OffSession
+    }
+
+    /// <summary>
+    /// ICT High-Probability Trading Windows (Kill Zones).
+    /// </summary>
+    public enum KillZone
+    {
+        None,
+        LOKZ,          // London Open Kill Zone (02:00 - 05:00 UTC)
+        NYAM,          // NY AM Kill Zone (07:00 - 10:00 UTC)
+        NYPM,          // NY PM Kill Zone (13:30 - 16:00 UTC)
+        SilverBullet1, // SB1 (10:00 - 11:00 UTC)
+        SilverBullet2, // SB2 (14:00 - 15:00 UTC)
+        SilverBullet3  // SB3 (15:00 - 16:00 UTC)
+    }
+
+    /// <summary>
+    /// ICT Power of Three (PO3) Phase.
+    /// </summary>
+    public enum Po3Phase
+    {
+        None,
+        Accumulation,
+        Manipulation,
+        Distribution
+    }
+
+    /// <summary>
+    /// Daily Directional Bias.
+    /// </summary>
+    public enum BiasType
+    {
+        BuyBias,
+        SellBias,
+        Neutral
+    }
 }

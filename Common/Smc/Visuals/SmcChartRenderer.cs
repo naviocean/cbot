@@ -269,5 +269,74 @@ namespace RedWave.Common.Smc
             string label = $"{obTypeLabel} ({ob.Direction}) #{ob.Id}";
             _chart.DrawText(key + "_TXT", label, ob.BarIndex, ob.TopPrice, textCol);
         }
+
+        public void DrawPdhPdl(double pdh, double pdl, int currentBarIndex)
+        {
+            if (_chart == null) return;
+
+            if (pdh > 0)
+            {
+                string keyPdh = "SMC_PDH";
+                TrackKey(keyPdh);
+                TrackKey(keyPdh + "_TXT");
+                _chart.DrawTrendLine(keyPdh, currentBarIndex - 50, pdh, currentBarIndex + 5, pdh, Color.Gold, 1, LineStyle.Lines);
+                _chart.DrawText(keyPdh + "_TXT", "PDH", currentBarIndex, pdh, Color.Gold);
+            }
+
+            if (pdl > 0)
+            {
+                string keyPdl = "SMC_PDL";
+                TrackKey(keyPdl);
+                TrackKey(keyPdl + "_TXT");
+                _chart.DrawTrendLine(keyPdl, currentBarIndex - 50, pdl, currentBarIndex + 5, pdl, Color.Silver, 1, LineStyle.Lines);
+                _chart.DrawText(keyPdl + "_TXT", "PDL", currentBarIndex, pdl, Color.Silver);
+            }
+        }
+
+        public void DrawBpr(BalancedPriceRange bpr, bool showVisual, bool autoClean = true)
+        {
+            if (_chart == null || bpr == null) return;
+            string key = $"SMC_BPR_{bpr.Id}";
+
+            if (!showVisual || (autoClean && bpr.IsMitigated))
+            {
+                return;
+            }
+
+            TrackKey(key);
+            TrackKey(key + "_TXT");
+
+            Color color = bpr.Direction == TradeType.Buy
+                ? Color.FromArgb(70, 255, 140, 0)
+                : Color.FromArgb(70, 255, 69, 0);
+
+            var rect = _chart.DrawRectangle(
+                key,
+                bpr.DetectedBarIndex,
+                bpr.OverlapTopPrice,
+                _chart.LastVisibleBarIndex + 5,
+                bpr.OverlapBottomPrice,
+                color
+            );
+            rect.IsFilled = true;
+
+            string label = $"BPR ({bpr.Direction}) #{bpr.Id}";
+            _chart.DrawText(key + "_TXT", label, bpr.DetectedBarIndex, bpr.OverlapTopPrice, Color.DarkOrange);
+        }
+
+        public void DrawAsianRange(double asianHigh, double asianLow, bool isLocked, int currentBarIndex)
+        {
+            if (_chart == null || asianHigh <= 0 || asianLow >= double.MaxValue) return;
+            string key = "SMC_ASIAN_RANGE";
+            TrackKey(key);
+            TrackKey(key + "_TXT");
+
+            Color color = Color.FromArgb(30, 128, 128, 128);
+            var rect = _chart.DrawRectangle(key, currentBarIndex - 20, asianHigh, currentBarIndex + 5, asianLow, color);
+            rect.IsFilled = true;
+
+            string label = isLocked ? "Asian Range (Locked)" : "Asian Range";
+            _chart.DrawText(key + "_TXT", label, currentBarIndex - 20, asianHigh, Color.Gray);
+        }
     }
 }
