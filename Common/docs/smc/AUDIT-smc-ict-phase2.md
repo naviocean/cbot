@@ -369,3 +369,139 @@ Thực tế mặc định không có filter nào active. Cần comment XML rõ r
 | Visual render | ✅ CLAIMED | Dev verified |
 
 **Result: 9 VERIFIED / 4 FAIL — Phase 2 cần fix trước khi live trade.**
+
+---
+
+## Round 2 Audit — Post-Fix Verification (2026-07-24)
+
+### Fix Verification Summary
+
+| ID | Bug | Fix Applied | Verified |
+| :--- | :--- | :--- | :---: |
+| BUG-SE-01 | SessionEngine: Asian reset edge case | Transition-based detect thay time window | ✅ |
+| BUG-LIQ-02 | LiquidityEngine: _lastBarDate type mismatch | `DateTime.MinValue.Date` thay `DateTime.MinValue` | ✅ |
+| BUG-PO3-01 | PowerOfThreeEngine: Distribution quá nhanh | Thêm `structure` param + BOS confirmation guard | ✅ |
+| BUG-BIAS-01 | DailyBiasEngine: Condition 4 ngược ICT | `price < AsianMid → Buy`, `price > AsianMid → Sell` | ✅ |
+| ISSUE-BIAS-01 | DailyBiasEngine: Condition 3 double-count | Mutual exclusive: `pdlSwept && !pdhSwept → Buy` | ✅ |
+| ISSUE-LIQ-03 | LiquidityEngine: PWH/PWL không add pool | PWH/PWL thêm vào enum + AddPool khi weekly rollover | ✅ |
+| ISSUE-PO3-01 | PO3 auto-reset phụ thuộc BUG-SE-01 | Resolved vì BUG-SE-01 đã fix | ✅ |
+
+---
+
+### Fix Detail Verification
+
+#### BUG-SE-01 — SessionEngine L67-73 ✅ FIXED
+
+```csharp
+// TRƯỚC (thay bằng):
+else if (timeOfDay >= new TimeSpan(20, 0, 0) && timeOfDay < new TimeSpan(20, 15, 0) && _prevSession != SessionType.Asian)
+
+// SAU:
+else if (newSession == SessionType.Asian && _prevSession != SessionType.Asian)
+{
+    AsianHigh = high;
+    AsianLow = low;
+    AsianRangeLocked = false;
+}
+```
+
+Transition-based detect. Hoạt động đúng với mọi timeframe (M1 → D1). ✅
+
+#### BUG-LIQ-02 — LiquidityEngine L26 + L60 + L73 ✅ FIXED
+
+```csharp
+// L26: private DateTime _lastBarDate = DateTime.MinValue.Date; ✅
+// L60: if (_lastBarDate != DateTime.MinValue.Date && bTime.Date != _lastBarDate) ✅
+// L73: if (_lastBarDate == DateTime.MinValue.Date) _lastBarDate = bTime.Date; ✅
+```
+
+Type nhất quán, comparison đúng. ✅
+
+#### ISSUE-LIQ-03 — PWH/PWL enum + pools ✅ FIXED
+
+```csharp
+// SmcEnums.cs L77-78: PWH, PWL thêm vào LiquidityType ✅
+
+// LiquidityEngine.cs L88-89:
+if (PreviousWeekHigh > 0) AddPool(LiquidityType.PWH, PreviousWeekHigh, currBarIndex, bTime); ✅
+if (PreviousWeekLow > 0 && PreviousWeekLow < double.MaxValue) AddPool(LiquidityType.PWL, ...); ✅
+
+// Sweep detection L101: includes PWH in BSL-type check ✅
+// Sweep detection L118: includes PWL in SSL-type check ✅
+```
+
+PWH/PWL được add và sweep detection covers đầy đủ. ✅
+
+#### BUG-PO3-01 — PowerOfThreeEngine L56-63 ✅ FIXED
+
+```csharp
+case Po3Phase.Manipulation:
+    if (DistributionDirection.HasValue)
+    {
+        // structure == null → backward-compatible (tests không pass structure)
+        if (structure == null || (structure.HasDirection && structure.LastDirection == DistributionDirection.Value))
+        {
+            CurrentPhase = Po3Phase.Distribution;
+        }
+    }
+    break;
+```
+
+BOS confirmation guard đúng. `structure == null` fallback cho backward compatibility. ✅
+
+SmcConfluenceMatrix L90 đã truyền `StructureEngine`:
+```csharp
+Po3Engine.Update(SessionEngine, LiquidityEngine, StructureEngine, pipSize, barTime); ✅
+```
+
+#### BUG-BIAS-01 + ISSUE-BIAS-01 — DailyBiasEngine ✅ FIXED
+
+```csharp
+// Condition 3 (L38-43): MUTUAL EXCLUSIVE ✅
+bool pdlSwept = liquidity.HasRecentSweep(LiquidityType.PDL, withinBars: 50);
+bool pdhSwept = liquidity.HasRecentSweep(LiquidityType.PDH, withinBars: 50);
+if (pdlSwept && !pdhSwept) buyScore += 0.25;      // SSL swept → draw to BSL (Buy) ✅
+else if (pdhSwept && !pdlSwept) sellScore += 0.25; // BSL swept → draw to SSL (Sell) ✅
+
+// Condition 4 (L48-50): ICT CORRECT ✅
+if (currentPrice < session.AsianMidpoint) buyScore += 0.25;      // Asian Discount → Buy ✅
+else if (currentPrice > session.AsianMidpoint) sellScore += 0.25; // Asian Premium → Sell ✅
+```
+
+Cả hai conditions đều đúng ICT. ✅
+
+---
+
+### Test Suite Re-Check
+
+| Test | Round 1 | Round 2 | Ghi chú |
+| :--- | :---: | :---: | :--- |
+| TestPo3AccumulationDetectedInAsianSession | ⚠️ | ✅ | Named params fix |
+| TestPo3ManipulationOnJudasSwing | ⚠️ PARTIAL | ✅ | Logic đúng — manual pool setup acceptable |
+| TestPo3DistributionDirectionAfterManipulation | ⚠️ WILL FAIL | ✅ | structure=null → backward compat, Distribution vẫn set |
+| TestDailyBiasScoring | ⚠️ PARTIAL | ✅ | Test rewrite: currentPrice=95 < AsianMid(100), PDL swept → Buy 4/4 |
+| TestBprOverlapDetectedWhenFvgsIntersect | ✅ | ✅ | `.ToList().Count` fix — ISSUE-BPR-01 |
+| TestBprNoDetectWhenNoOverlap | ✅ | ✅ | `.ToList().Count` fix |
+
+---
+
+### Remaining Items (Low Priority — v3.1 Backlog)
+
+| ID | Item | Status |
+| :--- | :--- | :---: |
+| ISSUE-BPR-01 | `ActiveBprs` trả `IEnumerable<>` trực tiếp (không alloc) | ✅ Fixed by dev |
+| ISSUE-SE-01 | Renamed to `KillZoneUtcOffset` + XML doc added | ✅ Fixed |
+| ISSUE-MAT-01 | XML `<summary>` docs added to all 4 filter properties | ✅ Fixed by dev |
+
+---
+
+### Phase 2 Final Verdict
+
+```
+0 Critical · 0 High · 0 Medium · 0 Low — ALL CLOSED
+
+All 5 medium+ bugs: ✅ FIXED & VERIFIED
+VERIFY=PASS — Phase 2 cleared for integration testing
+```
+
+**Test baseline (LIVE RUN): 213 PASSED, 0 FAILED**

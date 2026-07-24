@@ -9,7 +9,13 @@ namespace RedWave.Common.Smc
     /// </summary>
     public class SessionEngine
     {
-        public int TimezoneOffsetHours { get; set; } = 0; // UTC offset
+        /// <summary>
+        /// UTC offset applied to bar timestamps when detecting Kill Zones and Sessions.
+        /// Applied AFTER converting barTime to UTC: effectiveTime = barTime.ToUniversalTime().AddHours(KillZoneUtcOffset).
+        /// Default: 0 (no adjustment — use when broker bars are already in UTC).
+        /// Example: set -4 to shift NY Kill Zone detection if bars are UTC+4.
+        /// </summary>
+        public int KillZoneUtcOffset { get; set; } = 0;
 
         public SessionType CurrentSession { get; private set; } = SessionType.OffSession;
         public KillZone ActiveKillZone { get; private set; } = KillZone.None;
@@ -27,7 +33,7 @@ namespace RedWave.Common.Smc
 
         public void Update(DateTime barTime, double high, double low)
         {
-            DateTime utcTime = barTime.ToUniversalTime().AddHours(TimezoneOffsetHours);
+            DateTime utcTime = barTime.ToUniversalTime().AddHours(KillZoneUtcOffset);
             TimeSpan timeOfDay = utcTime.TimeOfDay;
 
             // 1. Session Detection (UTC)
