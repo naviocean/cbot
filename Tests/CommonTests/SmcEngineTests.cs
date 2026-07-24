@@ -454,7 +454,7 @@ namespace CommonTests
 
             bprEngine.Update(new[] { bullFvg, bearFvg }, 0.1);
 
-            TestRunner.Assert(bprEngine.ActiveBprs.Count == 1, "BprEngine detects 1 active Balanced Price Range overlap");
+            TestRunner.Assert(bprEngine.ActiveBprs.ToList().Count == 1, "BprEngine detects 1 active Balanced Price Range overlap");
             var bpr = bprEngine.ActiveBprs.First();
             TestRunner.Assert(bpr.OverlapTopPrice == 107.0 && bpr.OverlapBottomPrice == 104.0, "BprEngine overlap bounds math Top=107.0, Bottom=104.0");
             TestRunner.Assert(bpr.Direction == cAlgo.API.TradeType.Buy, "BPR direction is Buy when Bullish FVG formed before Bearish FVG");
@@ -475,7 +475,7 @@ namespace CommonTests
             };
 
             bprEngine.Update(new[] { bullFvg, bearFvg }, 0.1);
-            TestRunner.Assert(bprEngine.ActiveBprs.Count == 0, "BprEngine detects 0 BPRs when FVGs do not overlap");
+            TestRunner.Assert(bprEngine.ActiveBprs.ToList().Count == 0, "BprEngine detects 0 BPRs when FVGs do not overlap");
         }
 
         private static void TestBprMitigatedWhenPriceClosesBeyond()
@@ -510,7 +510,7 @@ namespace CommonTests
             var tAsian = new DateTime(2026, 7, 23, 21, 0, 0, DateTimeKind.Utc);
             session.Update(tAsian, 110.0, 100.0); // Range 10 pips >= 5.0
 
-            po3.Update(session, liquidity, 0.1, tAsian);
+            po3.Update(session, liquidity, pipSize: 0.1, barTime: tAsian);
             TestRunner.Assert(po3.CurrentPhase == Po3Phase.Accumulation, "PowerOfThreeEngine enters Accumulation phase during Asian session");
         }
 
@@ -522,7 +522,7 @@ namespace CommonTests
 
             var tAsian = new DateTime(2026, 7, 23, 21, 0, 0, DateTimeKind.Utc);
             session.Update(tAsian, 110.0, 100.0);
-            po3.Update(session, liquidity, 0.1, tAsian);
+            po3.Update(session, liquidity, pipSize: 0.1, barTime: tAsian);
 
             // Transition to London
             var tLondon = new DateTime(2026, 7, 24, 3, 0, 0, DateTimeKind.Utc);
@@ -542,7 +542,7 @@ namespace CommonTests
             liquidity.AddPool(LiquidityType.AsianLow, 100.0, 0, tAsian);
             liquidity.Update(bars, 4, 0.1, tLondon);
 
-            po3.Update(session, liquidity, 0.1, tLondon);
+            po3.Update(session, liquidity, pipSize: 0.1, barTime: tLondon);
             TestRunner.Assert(po3.CurrentPhase == Po3Phase.Manipulation, "PowerOfThreeEngine enters Manipulation phase on Asian Low Judas Swing sweep");
             TestRunner.Assert(po3.DistributionDirection == cAlgo.API.TradeType.Buy, "PowerOfThreeEngine sets DistributionDirection to Buy after Asian Low sweep");
         }
@@ -555,7 +555,7 @@ namespace CommonTests
 
             var tAsian = new DateTime(2026, 7, 23, 21, 0, 0, DateTimeKind.Utc);
             session.Update(tAsian, 110.0, 100.0);
-            po3.Update(session, liquidity, 0.1, tAsian);
+            po3.Update(session, liquidity, pipSize: 0.1, barTime: tAsian);
 
             var tLondon = new DateTime(2026, 7, 24, 3, 0, 0, DateTimeKind.Utc);
             session.Update(tLondon, 110.0, 98.0);
@@ -571,8 +571,8 @@ namespace CommonTests
             });
             liquidity.Update(bars, 4, 0.1, tLondon);
 
-            po3.Update(session, liquidity, 0.1, tLondon); // Manipulation phase
-            po3.Update(session, liquidity, 0.1, tLondon.AddMinutes(15)); // Distribution phase
+            po3.Update(session, liquidity, pipSize: 0.1, barTime: tLondon); // Manipulation phase
+            po3.Update(session, liquidity, pipSize: 0.1, barTime: tLondon.AddMinutes(15)); // Distribution phase
 
             TestRunner.Assert(po3.CurrentPhase == Po3Phase.Distribution, "PowerOfThreeEngine reaches Distribution phase");
             TestRunner.Assert(po3.IsSetupValid == true, "PowerOfThreeEngine IsSetupValid is true during Distribution phase");
@@ -589,9 +589,21 @@ namespace CommonTests
             var tAsian = new DateTime(2026, 7, 23, 21, 0, 0, DateTimeKind.Utc);
             session.Update(tAsian, 110.0, 90.0); // AsianMidpoint = 100.0
 
-            // Price 105.0 is in Discount (< 110.0) and > AsianMidpoint (100.0)
-            // HTFBias Buy (+0.25), Discount (+0.25), PDL intact (+0.25), Price > AsianMid (+0.25) -> Total Buy Score = 1.0
-            biasEngine.Update(htfBias, range, liquidity, session, 105.0, tAsian);
+            // Add PDL sweep so PDL swept & PDH intact -> condition 3 +0.25 Buy
+            var bars = new MockBars(new List<MockBarData>
+            {
+                new MockBarData { Time = tAsian, Open = 100, High = 105, Low = 95, Close = 102 },
+                new MockBarData { Time = tAsian.AddMinutes(5), Open = 102, High = 105, Low = 95, Close = 102 },
+                new MockBarData { Time = tAsian.AddMinutes(10), Open = 102, High = 105, Low = 95, Close = 102 },
+                new MockBarData { Time = tAsian.AddMinutes(15), Open = 102, High = 105, Low = 95, Close = 102 },
+                new MockBarData { Time = tAsian.AddMinutes(20), Open = 102, High = 105, Low = 95, Close = 102 }
+            });
+            liquidity.AddPool(LiquidityType.PDL, 98.0, 0, tAsian);
+            liquidity.Update(bars, 4, 0.1, tAsian);
+
+            // Price 95.0 is in Discount (< 110.0) and < AsianMidpoint (100.0)
+            // HTFBias Buy (+0.25), Discount (+0.25), PDL swept (+0.25), Price < AsianMid (+0.25) -> Total Buy Score = 1.0
+            biasEngine.Update(htfBias, range, liquidity, session, 95.0, tAsian);
 
             TestRunner.Assert(biasEngine.TodayBias == BiasType.BuyBias, "DailyBiasEngine calculates BuyBias when 4/4 conditions match");
             TestRunner.Assert(biasEngine.BiasScore == 1.0, "DailyBiasEngine calculates 1.0 BiasScore for perfect Buy bias");

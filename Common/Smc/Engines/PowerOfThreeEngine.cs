@@ -16,7 +16,7 @@ namespace RedWave.Common.Smc
         public double ManipulationSweepPrice { get; private set; }
         public bool IsSetupValid => CurrentPhase == Po3Phase.Distribution;
 
-        public void Update(SessionEngine session, LiquidityEngine liquidity, double pipSize = 0.0001, DateTime? barTime = null)
+        public void Update(SessionEngine session, LiquidityEngine liquidity, MarketStructureEngine structure = null, double pipSize = 0.0001, DateTime? barTime = null)
         {
             if (session == null || liquidity == null)
                 return;
@@ -55,7 +55,10 @@ namespace RedWave.Common.Smc
                 case Po3Phase.Manipulation:
                     if (DistributionDirection.HasValue)
                     {
-                        CurrentPhase = Po3Phase.Distribution;
+                        if (structure == null || (structure.HasDirection && structure.LastDirection == DistributionDirection.Value))
+                        {
+                            CurrentPhase = Po3Phase.Distribution;
+                        }
                     }
                     break;
 

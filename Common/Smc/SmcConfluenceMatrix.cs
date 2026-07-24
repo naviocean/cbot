@@ -20,10 +20,29 @@ namespace RedWave.Common.Smc
         public PowerOfThreeEngine Po3Engine { get; }
         public DailyBiasEngine BiasEngine { get; }
 
+        /// <summary>
+        /// Higher Timeframe (HTF) Market Bias manually injected or updated from HTF Matrix instance.
+        /// </summary>
         public MtfBias HTFBias { get; set; }
+
+        /// <summary>
+        /// Filter flag for MTF Bias. When true, blocks setups counter to HTFBias (requires HTFBias != null and HTFBias.IsValid).
+        /// </summary>
         public bool EnableMtfFilter { get; set; } = true;
+
+        /// <summary>
+        /// Filter flag for Power of Three (PO3). When true, requires PO3 Distribution phase alignment. Default: false.
+        /// </summary>
         public bool EnablePo3Filter { get; set; } = false;
+
+        /// <summary>
+        /// Filter flag for Daily Directional Bias. When true, blocks setups counter to DailyBiasEngine.TodayBias. Default: false.
+        /// </summary>
         public bool EnableBiasFilter { get; set; } = false;
+
+        /// <summary>
+        /// Filter flag for Kill Zone hours. When true, blocks setups outside active ICT Kill Zones. Default: false.
+        /// </summary>
         public bool EnableKillZoneFilter { get; set; } = false;
 
         public SmcConfluenceMatrix()
@@ -68,7 +87,7 @@ namespace RedWave.Common.Smc
             RangeEngine.Update(StructureEngine.CurrentSwingHigh, StructureEngine.CurrentSwingLow);
             NwogEngine.Update(bars, barIndex, pipSize);
             UnicornDetector.Update(ObEngine.ActiveOrderBlocks, FvgEngine.ActiveFvgs, barTime);
-            Po3Engine.Update(SessionEngine, LiquidityEngine, pipSize, barTime);
+            Po3Engine.Update(SessionEngine, LiquidityEngine, StructureEngine, pipSize, barTime);
             BiasEngine.Update(HTFBias, RangeEngine, LiquidityEngine, SessionEngine, recentClose, barTime);
         }
 

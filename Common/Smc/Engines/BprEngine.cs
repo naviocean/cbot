@@ -16,7 +16,7 @@ namespace RedWave.Common.Smc
 
         public double MinOverlapPips { get; set; } = 2.0;
 
-        public IReadOnlyList<BalancedPriceRange> ActiveBprs => _bprs.Where(b => !b.IsMitigated).ToList().AsReadOnly();
+        public IEnumerable<BalancedPriceRange> ActiveBprs => _bprs.Where(b => !b.IsMitigated);
         public IReadOnlyList<BalancedPriceRange> AllBprs => _bprs.AsReadOnly();
 
         public void Update(IEnumerable<FairValueGap> fvgs, double pipSize = 0.0001, double recentClose = 0)

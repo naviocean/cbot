@@ -32,21 +32,21 @@ namespace RedWave.Common.Smc
                 else if (range.IsInPremium(currentPrice)) sellScore += 0.25;
             }
 
-            // 3. PDH / PDL Intactness (25%)
+            // 3. PDH / PDL Liquidity Draw (25%)
             if (liquidity != null)
             {
-                // If PDL hasn't been swept today -> favors Buy
-                if (!liquidity.HasRecentSweep(LiquidityType.PDL, withinBars: 50)) buyScore += 0.25;
+                bool pdlSwept = liquidity.HasRecentSweep(LiquidityType.PDL, withinBars: 50);
+                bool pdhSwept = liquidity.HasRecentSweep(LiquidityType.PDH, withinBars: 50);
 
-                // If PDH hasn't been swept today -> favors Sell
-                if (!liquidity.HasRecentSweep(LiquidityType.PDH, withinBars: 50)) sellScore += 0.25;
+                if (pdlSwept && !pdhSwept) buyScore += 0.25;      // SSL swept -> draw to BSL (Buy)
+                else if (pdhSwept && !pdlSwept) sellScore += 0.25; // BSL swept -> draw to SSL (Sell)
             }
 
             // 4. Asian Midpoint Relation (25%)
             if (session != null && session.AsianMidpoint > 0 && currentPrice > 0)
             {
-                if (currentPrice > session.AsianMidpoint) buyScore += 0.25;
-                else if (currentPrice < session.AsianMidpoint) sellScore += 0.25;
+                if (currentPrice < session.AsianMidpoint) buyScore += 0.25;      // Asian Discount -> Buy
+                else if (currentPrice > session.AsianMidpoint) sellScore += 0.25; // Asian Premium -> Sell
             }
 
             // Determine final bias

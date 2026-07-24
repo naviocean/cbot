@@ -64,7 +64,7 @@ namespace RedWave.Common.Smc
             {
                 AsianRangeLocked = true; // Lock Asian Range at London Open
             }
-            else if (timeOfDay >= new TimeSpan(20, 0, 0) && timeOfDay < new TimeSpan(20, 15, 0) && _prevSession != SessionType.Asian)
+            else if (newSession == SessionType.Asian && _prevSession != SessionType.Asian)
             {
                 // New Asian Session start -> Reset Asian Range
                 AsianHigh = high;

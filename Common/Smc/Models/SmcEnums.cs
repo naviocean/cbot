@@ -73,7 +73,9 @@ namespace RedWave.Common.Smc
         AsianHigh, // Asian Session High
         AsianLow,  // Asian Session Low
         PDH,       // Previous Day High
-        PDL        // Previous Day Low
+        PDL,       // Previous Day Low
+        PWH,       // Previous Week High
+        PWL        // Previous Week Low
     }
 
     /// <summary>

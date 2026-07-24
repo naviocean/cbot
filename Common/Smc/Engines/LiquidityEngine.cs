@@ -23,7 +23,7 @@ namespace RedWave.Common.Smc
         public double AsianSessionHigh { get; private set; }
         public double AsianSessionLow { get; private set; }
 
-        private DateTime _lastBarDate = DateTime.MinValue;
+        private DateTime _lastBarDate = DateTime.MinValue.Date;
         private double _currentDayHigh = 0;
         private double _currentDayLow = double.MaxValue;
 
@@ -57,7 +57,7 @@ namespace RedWave.Common.Smc
             DateTime bTime = barTime ?? bars.OpenTimes[currBarIndex];
 
             // 1. Roll Daily PDH/PDL & Weekly PWH/PWL
-            if (_lastBarDate != DateTime.MinValue && bTime.Date != _lastBarDate)
+            if (_lastBarDate != DateTime.MinValue.Date && bTime.Date != _lastBarDate)
             {
                 PreviousDayHigh = _currentDayHigh;
                 PreviousDayLow = _currentDayLow;
@@ -70,7 +70,7 @@ namespace RedWave.Common.Smc
             }
             else
             {
-                if (_lastBarDate == DateTime.MinValue) _lastBarDate = bTime.Date;
+                if (_lastBarDate == DateTime.MinValue.Date) _lastBarDate = bTime.Date;
                 if (high > _currentDayHigh) _currentDayHigh = high;
                 if (low < _currentDayLow) _currentDayLow = low;
             }
@@ -84,6 +84,9 @@ namespace RedWave.Common.Smc
                 _currentWeekHigh = high;
                 _currentWeekLow = low;
                 _lastWeekNumber = currWeek;
+
+                if (PreviousWeekHigh > 0) AddPool(LiquidityType.PWH, PreviousWeekHigh, currBarIndex, bTime);
+                if (PreviousWeekLow > 0 && PreviousWeekLow < double.MaxValue) AddPool(LiquidityType.PWL, PreviousWeekLow, currBarIndex, bTime);
             }
             else
             {
@@ -95,7 +98,7 @@ namespace RedWave.Common.Smc
             // 2. Check if current bar sweeps any active Liquidity Pool
             foreach (var pool in ActivePools)
             {
-                if (pool.Type == LiquidityType.BSL || pool.Type == LiquidityType.EQH || pool.Type == LiquidityType.AsianHigh || pool.Type == LiquidityType.PDH)
+                if (pool.Type == LiquidityType.BSL || pool.Type == LiquidityType.EQH || pool.Type == LiquidityType.AsianHigh || pool.Type == LiquidityType.PDH || pool.Type == LiquidityType.PWH)
                 {
                     if (high > pool.PriceLevel)
                     {
@@ -112,7 +115,7 @@ namespace RedWave.Common.Smc
                         });
                     }
                 }
-                else if (pool.Type == LiquidityType.SSL || pool.Type == LiquidityType.EQL || pool.Type == LiquidityType.AsianLow || pool.Type == LiquidityType.PDL)
+                else if (pool.Type == LiquidityType.SSL || pool.Type == LiquidityType.EQL || pool.Type == LiquidityType.AsianLow || pool.Type == LiquidityType.PDL || pool.Type == LiquidityType.PWL)
                 {
                     if (low < pool.PriceLevel)
                     {
@@ -188,7 +191,7 @@ namespace RedWave.Common.Smc
             PreviousWeekLow = 0;
             AsianSessionHigh = 0;
             AsianSessionLow = 0;
-            _lastBarDate = DateTime.MinValue;
+            _lastBarDate = DateTime.MinValue.Date;
             _currentDayHigh = 0;
             _currentDayLow = double.MaxValue;
             _lastWeekNumber = -1;
